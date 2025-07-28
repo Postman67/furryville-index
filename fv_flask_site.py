@@ -88,15 +88,16 @@ def api_the_mall():
     
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT StallNumber, StreetName, IGN, StallName FROM the_mall ORDER BY StallNumber")
+        cursor.execute("SELECT StallNumber, StreetName, IGN, StallName, ItemsSold FROM the_mall ORDER BY StallNumber")
         
         shops = []
-        for (stall_number, street_name, ign, stall_name) in cursor:
+        for (stall_number, street_name, ign, stall_name, items_sold) in cursor:
             shops.append({
                 "StallNumber": stall_number,
                 "StreetName": street_name,
                 "IGN": ign,
-                "StallName": stall_name
+                "StallName": stall_name,
+                "ItemsSold": items_sold
             })
         
         cursor.close()
