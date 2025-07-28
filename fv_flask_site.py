@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, render_template
-import mariadb
+import pymysql as mariadb
 import os
 from dotenv import load_dotenv
 
