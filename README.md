@@ -1,6 +1,8 @@
 # furryville-index
 
 ## MariaDB Info
+Site DB user is READ ONLY
+
 furryville-index.db
 fv-index-reader
 Password stored in local .env (FV_INDEX_READER_PASS)
