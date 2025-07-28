@@ -193,6 +193,121 @@ body {
     color: #764ba2;
 }
 
+/* Shop Section & Table Styles */
+.shop-section {
+    margin: 2rem 0;
+}
+
+.search-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.search-input {
+    flex: 1;
+    max-width: 400px;
+    padding: 0.8rem 1rem;
+    border: 2px solid #ddd;
+    border-radius: 25px;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #764ba2;
+    box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+}
+
+.clear-btn {
+    padding: 0.8rem 1.5rem;
+    background: #764ba2;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.clear-btn:hover {
+    background: #5a3a7a;
+    transform: translateY(-2px);
+}
+
+.table-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.shop-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.shop-table thead {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    color: white;
+}
+
+.shop-table th,
+.shop-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.shop-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.8rem;
+}
+
+.shop-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.shop-table tbody tr:hover {
+    background-color: rgba(118, 75, 162, 0.05);
+}
+
+.shop-table tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.status-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-badge.open {
+    background-color: #48bb78;
+    color: white;
+}
+
+.status-badge.closed {
+    background-color: #f56565;
+    color: white;
+}
+
+/* Hide rows when searching */
+.shop-table tbody tr.hidden {
+    display: none;
+}
+
 /* Footer */
 footer {
     text-align: center;
@@ -243,5 +358,62 @@ footer {
 
     .shop-status {
         align-self: flex-end;
+    }
+
+    /* Table responsive design */
+    .search-container {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .search-input {
+        max-width: 100%;
+    }
+
+    .table-container {
+        border-radius: 10px;
+    }
+
+    .shop-table {
+        font-size: 0.8rem;
+    }
+
+    .shop-table thead {
+        display: none;
+    }
+
+    .shop-table,
+    .shop-table tbody,
+    .shop-table tr,
+    .shop-table td {
+        display: block;
+    }
+
+    .shop-table tr {
+        margin-bottom: 1rem;
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .shop-table td {
+        border: none;
+        padding: 0.5rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .shop-table td:before {
+        content: attr(data-label) ": ";
+        font-weight: bold;
+        color: #764ba2;
+        flex-shrink: 0;
+        margin-right: 1rem;
+    }
+
+    .status-badge {
+        margin-left: auto;
     }
 }
