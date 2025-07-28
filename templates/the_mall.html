@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="unload=()">
+    <title>{{ title or 'The Mall - Furryville Index' }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content">
+        <div class="hero-section">
+            <h1>🛍️ The Mall</h1>
+            <p>Modern shopping and everyday essentials in Furryville's commercial center</p>
+            
+            {% if message %}
+                <div class="message">{{ message }}</div>
+            {% endif %}
+        </div>
+
+        <section class="shop-section">
+            <div class="search-container">
+                <input type="text" id="shopSearch" placeholder="Search shops, categories, or locations..." class="search-input">
+                <button id="clearSearch" class="clear-btn">Clear</button>
+            </div>
+            
+            <div class="table-container">
+                <table id="shopTable" class="shop-table">
+                    <thead>
+                        <tr>
+                            <th>Stall Number</th>
+                            <th>Stall Name</th>
+                            <th>Owner IGN</th>
+                            <th>Street Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Table will be populated by JavaScript with database data -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
