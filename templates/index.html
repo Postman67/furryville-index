@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or 'Furryville Index' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="nav-title">🐾 Furryville Index</h1>
+                <ul class="nav-menu">
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('warp_hall') }}">The Warp Hall</a></li>
+                    <li><a href="{{ url_for('the_mall') }}">The Mall</a></li>
+                    <li><a href="{{ url_for('api_status') }}">API Status</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="hero-section">
+            <h1>Welcome to Furryville Index</h1>
+            <p>Your comprehensive directory and map for all shops in Furryville</p>
+            
+            {% if message %}
+                <div class="message">{{ message }}</div>
+            {% endif %}
+        </div>
+
+        <section class="features">
+            <div class="feature-card">
+                <h3>� Shop Directory</h3>
+                <p>Browse all available shops and services in Furryville</p>
+            </div>
+            <div class="feature-card">
+                <h3>�️ Interactive Map</h3>
+                <p>Find exactly where each shop is located in the city</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Business Info</h3>
+                <p>Get detailed information about each establishment</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Furryville Index. Your guide to shopping in Furryville.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
