@@ -7,3 +7,6 @@
 
 ## Interactive Map
 - We make this???
+
+##
+- Add another collumn on the mall list
