@@ -3,8 +3,8 @@
 ## MariaDB Info
 Site DB user is READ ONLY
 
-furryville-index.db
-fv-index-reader
+Host: furryville-index.db
+Read account: fv-index-reader
 Password stored in local .env (FV_INDEX_READER_PASS)
 
 ## Warp Hall DB entry format
