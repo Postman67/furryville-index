@@ -21,3 +21,4 @@ Table Name: the_mall
 - Street Name (StreetName)
 - Owner IGN (IGN)
 - Stall Name (StallName)
+- Items Sold (ItemsSold)
