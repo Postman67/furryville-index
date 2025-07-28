@@ -8,8 +8,8 @@ itsdangerous==2.2.0
 click==8.2.1
 blinker==1.9.0
 
-# Database connectivity
-mariadb==1.1.13
+# Database connectivity (PyMySQL instead of mariadb for better Python 3.12 compatibility)
+PyMySQL==1.1.1
 
 # Environment variables management
 python-dotenv==1.1.1
