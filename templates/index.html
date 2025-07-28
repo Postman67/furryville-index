@@ -4,22 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title or 'Furryville Index' }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <header>
-        <nav class="navbar">
-            <div class="nav-container">
-                <h1 class="nav-title">🐾 Furryville Index</h1>
-                <ul class="nav-menu">
-                    <li><a href="{{ url_for('home') }}">Home</a></li>
-                    <li><a href="{{ url_for('warp_hall') }}">The Warp Hall</a></li>
-                    <li><a href="{{ url_for('the_mall') }}">The Mall</a></li>
-                    <li><a href="{{ url_for('api_status') }}">API Status</a></li>
-                </ul>
-            </div>
-        </nav>
-    </header>
+    {% include 'header.html' %}
 
     <main class="main-content">
         <div class="hero-section">
@@ -47,9 +36,7 @@
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2025 Furryville Index. Your guide to shopping in Furryville.</p>
-    </footer>
+    {% include 'footer.html' %}
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
