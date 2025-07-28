@@ -6,7 +6,6 @@
                     <li><a href="{{ url_for('home') }}" {% if request.endpoint == 'home' %}class="active"{% endif %}>Home</a></li>
                     <li><a href="{{ url_for('warp_hall') }}" {% if request.endpoint == 'warp_hall' %}class="active"{% endif %}>The Warp Hall</a></li>
                     <li><a href="{{ url_for('the_mall') }}" {% if request.endpoint == 'the_mall' %}class="active"{% endif %}>The Mall</a></li>
-                    <li><a href="{{ url_for('api_status') }}" {% if request.endpoint == 'api_status' %}class="active"{% endif %}>API Status</a></li>
                 </ul>
             </div>
         </nav>
