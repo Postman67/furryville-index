@@ -100,20 +100,27 @@ body {
 }
 
 /* Features Section */
-.home-layout {
-    display: flex;
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
     margin: 4rem 0;
-    align-items: flex-start;
 }
 
+/* Discord Sidebar */
 .discord-sidebar {
-    flex-shrink: 0;
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    width: 350px;
     background: rgba(45, 45, 45, 0.95);
     padding: 1.5rem;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     border: 1px solid #555;
+    z-index: 999;
+    backdrop-filter: blur(10px);
 }
 
 .discord-sidebar h3 {
@@ -127,13 +134,6 @@ body {
     border-radius: 10px;
     max-width: 100%;
     height: auto;
-}
-
-.features {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    flex: 1;
 }
 
 .feature-card {
@@ -382,24 +382,17 @@ footer {
         justify-content: center;
     }
 
-    .home-layout {
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
     .discord-sidebar {
-        order: 2;
-        align-self: center;
+        position: static;
+        transform: none;
+        width: 100%;
+        max-width: 350px;
+        margin: 2rem auto;
     }
 
     .discord-sidebar iframe {
         width: 100%;
-        max-width: 350px;
         height: 400px;
-    }
-
-    .features {
-        order: 1;
     }
 
     .hero-section h1 {
