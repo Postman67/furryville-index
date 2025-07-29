@@ -368,11 +368,6 @@ function showNotification(message, type = 'info') {
 
 // Check database status and display status message
 async function checkDatabaseStatus() {
-    // Only run on home page
-    if (!window.location.pathname.includes('/') || window.location.pathname !== '/') {
-        return;
-    }
-    
     const statusContainer = document.getElementById('db-status');
     if (!statusContainer) return;
     
