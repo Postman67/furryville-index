@@ -100,11 +100,40 @@ body {
 }
 
 /* Features Section */
+.home-layout {
+    display: flex;
+    gap: 2rem;
+    margin: 4rem 0;
+    align-items: flex-start;
+}
+
+.discord-sidebar {
+    flex-shrink: 0;
+    background: rgba(45, 45, 45, 0.95);
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid #555;
+}
+
+.discord-sidebar h3 {
+    color: #ffd700;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+.discord-sidebar iframe {
+    border-radius: 10px;
+    max-width: 100%;
+    height: auto;
+}
+
 .features {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
-    margin: 4rem 0;
+    flex: 1;
 }
 
 .feature-card {
@@ -351,6 +380,26 @@ footer {
         gap: 1rem;
         flex-wrap: wrap;
         justify-content: center;
+    }
+
+    .home-layout {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .discord-sidebar {
+        order: 2;
+        align-self: center;
+    }
+
+    .discord-sidebar iframe {
+        width: 100%;
+        max-width: 350px;
+        height: 400px;
+    }
+
+    .features {
+        order: 1;
     }
 
     .hero-section h1 {
