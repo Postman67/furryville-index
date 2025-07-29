@@ -4,6 +4,7 @@
                 <h1 class="nav-title">🐾 Furryville</h1>
                 <ul class="nav-menu">
                     <li><a href="{{ url_for('home') }}" {% if request.endpoint == 'home' %}class="active"{% endif %}>Home</a></li>
+                    <li><a href="https://discord.gg/your-invite-code" target="_blank" rel="noopener noreferrer">Discord</a></li>
                     <li><a href="{{ url_for('warp_hall') }}" {% if request.endpoint == 'warp_hall' %}class="active"{% endif %}>The Warp Hall</a></li>
                     <li><a href="{{ url_for('the_mall') }}" {% if request.endpoint == 'the_mall' %}class="active"{% endif %}>The Mall</a></li>
                 </ul>

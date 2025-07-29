@@ -64,6 +64,18 @@ body {
     font-weight: 600;
 }
 
+/* Override for external links - prevent active/focus selection */
+.nav-menu a[target="_blank"]:active,
+.nav-menu a[target="_blank"]:focus {
+    color: #e0e0e0 !important;
+    font-weight: 500 !important;
+    outline: none;
+}
+
+.nav-menu a[target="_blank"]:hover {
+    color: #87ceeb !important;
+}
+
 /* Main Content */
 .main-content {
     max-width: 1200px;
