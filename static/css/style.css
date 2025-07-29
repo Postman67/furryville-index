@@ -197,11 +197,6 @@ body {
     color: #ffd700;
     margin-bottom: 1rem;
     font-size: 1.3rem;
-    transition: color 0.3s ease;
-}
-
-.feature-card:hover h3 {
-    color: #87ceeb;
 }
 
 .feature-card p {
