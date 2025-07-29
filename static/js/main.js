@@ -58,11 +58,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fun easter egg - console message
     console.log(`
-    🎨 Welcome to Furryville Index! 🎨
+    🎨 Welcome to Furryville! 🎨
     ================================
-    Your guide to shopping in Furryville
+    Developed and maintained by Postman67 https://links.peterd.xyz
     If you're seeing this, you might be a developer too! 
-    Feel free to contribute to our project! 🐾
+    Feel free to reach out for site suggestions! 🐾
     `);
 });
 
@@ -379,12 +379,12 @@ async function checkDatabaseStatus() {
         const data = await response.json();
         console.log('API Status response:', data);
         
-        const isHealthy = data.database_status === 'connected';
+        const isOnline = data.database_status === 'connected';
         
-        statusContainer.className = `db-status ${isHealthy ? 'db-online' : 'db-offline'}`;
+        statusContainer.className = `db-status ${isOnline ? 'db-online' : 'db-offline'}`;
         statusContainer.innerHTML = `
-            <span class="status-icon">${isHealthy ? '✅' : '❌'}</span>
-            <span class="status-text">${isHealthy ? 'Database is healthy' : 'Database offline'}</span>
+            <span class="status-icon">${isOnline ? '✅' : '❌'}</span>
+            <span class="status-text">${isOnline ? 'Database is online' : 'Database offline'}</span>
         `;
         
     } catch (error) {
