@@ -56,6 +56,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load database data if we're on a shop page
     loadShopData();
 
+    // Check database status on home page
+    checkDatabaseStatus();
+
     // Fun easter egg - console message
     console.log(`
     🎨 Welcome to Furryville Index! 🎨
@@ -361,4 +364,43 @@ function showNotification(message, type = 'info') {
             }
         }, 300);
     }, 3000);
+}
+
+// Check database status and display status message
+async function checkDatabaseStatus() {
+    // Only run on home page
+    if (!window.location.pathname.includes('/') || window.location.pathname !== '/') {
+        return;
+    }
+    
+    const statusContainer = document.getElementById('db-status');
+    if (!statusContainer) return;
+    
+    try {
+        console.log('Checking database status...');
+        const response = await fetch('/api/status');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('API Status response:', data);
+        
+        const isHealthy = data.database_status === 'connected';
+        
+        statusContainer.className = `db-status ${isHealthy ? 'db-online' : 'db-offline'}`;
+        statusContainer.innerHTML = `
+            <span class="status-icon">${isHealthy ? '✅' : '❌'}</span>
+            <span class="status-text">${isHealthy ? 'Database is healthy' : 'Database offline'}</span>
+        `;
+        
+    } catch (error) {
+        console.error('Error checking database status:', error);
+        statusContainer.className = 'db-status db-offline';
+        statusContainer.innerHTML = `
+            <span class="status-icon">❌</span>
+            <span class="status-text">Database offline</span>
+        `;
+    }
 }

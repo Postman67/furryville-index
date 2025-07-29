@@ -14,7 +14,12 @@
     <main class="main-content">
         <div class="hero-section">
             <h1>Welcome to Furryville</h1>
-            <p>Your comprehensive directory and map for all shops in Furryville</p>
+            <p>Find a shop, a warp, or just discover furryville</p>
+            
+            <div id="db-status" class="db-status db-checking">
+                <span class="status-icon">⏳</span>
+                <span class="status-text">Checking database...</span>
+            </div>
             
             {% if message %}
                 <div class="message">{{ message }}</div>
