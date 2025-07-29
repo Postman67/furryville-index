@@ -33,16 +33,44 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
     transition: box-shadow 0.3s ease;
     min-height: 100px;
+    position: relative;
+    overflow: hidden;
 }
 
 .staff-card:hover {
     box-shadow: 0 12px 35px rgba(255, 215, 0, 0.15);
 }
 
+/* Banner Background */
+.staff-banner {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 200px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+}
+
+.staff-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to right, rgba(45, 45, 45, 0.95) 0%, rgba(45, 45, 45, 0.7) 50%, rgba(45, 45, 45, 0.3) 80%, transparent 100%);
+    z-index: 2;
+}
+
 /* Avatar Section */
 .staff-avatar {
     flex-shrink: 0;
     margin-right: 1.5rem;
+    position: relative;
+    z-index: 3;
 }
 
 .avatar-image {
@@ -63,6 +91,8 @@
 .staff-info {
     flex: 1;
     text-align: left;
+    position: relative;
+    z-index: 3;
 }
 
 .staff-name {
