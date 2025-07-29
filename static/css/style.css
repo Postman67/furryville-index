@@ -69,7 +69,6 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
-    padding-left: 400px; /* Make room for Discord widget */
     flex: 1;
 }
 
@@ -371,10 +370,6 @@ footer {
         gap: 1rem;
         flex-wrap: wrap;
         justify-content: center;
-    }
-
-    .main-content {
-        padding: 2rem; /* Reset padding on mobile */
     }
 
     .discord-sidebar {
