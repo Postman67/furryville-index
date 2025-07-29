@@ -5,7 +5,7 @@ Site DB user is READ ONLY
 
 - Host: furryville-index.db
 - Read account: I'm not telling :3
-- Password stored in local .env (FV_INDEX_READER_PASS)
+- Password stored in local .env
 
 ## Warp Hall DB entry format
 Table Name: warp_hall
