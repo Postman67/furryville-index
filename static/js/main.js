@@ -135,12 +135,12 @@ function updateShopTable(shops) {
                 <td data-label="Owner IGN">${shop.IGN || 'Unknown'}</td>
             `;
         } else if (window.location.pathname.includes('the-mall')) {
-            // The Mall: StallNumber, StallName, IGN, StreetName, ItemsSold
+            // The Mall: StallNumber, StreetName, StallName, IGN, ItemsSold
             row.innerHTML = `
                 <td data-label="Stall Number">${shop.StallNumber || 'N/A'}</td>
+                <td data-label="Street Name">${shop.StreetName || 'Unknown Street'}</td>
                 <td data-label="Stall Name">${shop.StallName || 'Unnamed Shop'}</td>
                 <td data-label="Owner IGN">${shop.IGN || 'Unknown'}</td>
-                <td data-label="Street Name">${shop.StreetName || 'Unknown Street'}</td>
                 <td data-label="Items Sold">${shop.ItemsSold || 'No data'}</td>
             `;
         }
