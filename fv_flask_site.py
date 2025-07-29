@@ -25,17 +25,22 @@ def get_db_connection():
 @app.route('/')
 def home():
     """Home endpoint - serves the main page"""
-    return render_template('index.html', title='Furryville Index - Home',message='Welcome to the Furryville Index!')
+    return render_template('index.html', title='Furryville - Home',message='Welcome to Furryville!')
 
 @app.route('/warp-hall')
 def warp_hall():
     """The Warp Hall - Magical shops page"""
-    return render_template('warp_hall.html', title='The Warp Hall - Furryville Index',message='Search for warp stalls')
+    return render_template('warp_hall.html', title='The Warp Hall - Furryville',message='Search for warp stalls')
 
 @app.route('/the-mall')
 def the_mall():
     """The Mall - Modern shopping page"""
-    return render_template('the_mall.html', title='The Mall - Furryville Index',message='Browse modern shops and everyday essentials')
+    return render_template('the_mall.html', title='The Mall - Furryville',message='Search for shop stalls in The Mall')
+
+@app.route('/about')
+def about():
+    """About page"""
+    return render_template('about.html', title='About - Furryville', message='Learn more about Furryville.')
 
 @app.route('/api/warp-hall')
 def api_warp_hall():
