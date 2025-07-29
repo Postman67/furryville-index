@@ -1,7 +1,7 @@
     <header>
         <nav class="navbar">
             <div class="nav-container">
-                <h1 class="nav-title">🐾 Furryville Index</h1>
+                <h1 class="nav-title">🐾 Furryville</h1>
                 <ul class="nav-menu">
                     <li><a href="{{ url_for('home') }}" {% if request.endpoint == 'home' %}class="active"{% endif %}>Home</a></li>
                     <li><a href="{{ url_for('warp_hall') }}" {% if request.endpoint == 'warp_hall' %}class="active"{% endif %}>The Warp Hall</a></li>
