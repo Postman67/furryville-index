@@ -180,6 +180,13 @@ body {
     border: 1px solid #555;
 }
 
+.feature-button {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: pointer;
+}
+
 .feature-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 40px rgba(255, 215, 0, 0.2);
@@ -190,6 +197,11 @@ body {
     color: #ffd700;
     margin-bottom: 1rem;
     font-size: 1.3rem;
+    transition: color 0.3s ease;
+}
+
+.feature-card:hover h3 {
+    color: #87ceeb;
 }
 
 .feature-card p {
