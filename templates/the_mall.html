@@ -16,6 +16,11 @@
             <h1>🛍️ The Mall</h1>
             <p>Modern shopping and everyday essentials in Furryville's commercial center</p>
             
+            <div id="db-status" class="db-status db-checking">
+                <span class="status-icon">⏳</span>
+                <span class="status-text">Checking database...</span>
+            </div>
+            
             {% if message %}
                 <div class="message">{{ message }}</div>
             {% endif %}

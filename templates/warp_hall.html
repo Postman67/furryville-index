@@ -16,6 +16,11 @@
             <h1>🌀 The Warp Hall</h1>
             <p>Mystical shops and magical services in Furryville's enchanted district</p>
             
+            <div id="db-status" class="db-status db-checking">
+                <span class="status-icon">⏳</span>
+                <span class="status-text">Checking database...</span>
+            </div>
+            
             {% if message %}
                 <div class="message">{{ message }}</div>
             {% endif %}
