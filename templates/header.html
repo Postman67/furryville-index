@@ -7,6 +7,7 @@
                     <li><a href="https://discord.gg/your-invite-code" target="_blank" rel="noopener noreferrer" style="color: #e0e0e0; font-weight: 500; text-decoration: none; transition: color 0.3s ease;" onmouseenter="this.style.color='#87ceeb'" onmouseleave="this.style.color='#e0e0e0'" onfocus="this.style.color='#e0e0e0'; this.style.outline='none'" onblur="this.style.color='#e0e0e0'">Discord</a></li>
                     <li><a href="{{ url_for('warp_hall') }}" {% if request.endpoint == 'warp_hall' %}class="active"{% endif %}>The Warp Hall</a></li>
                     <li><a href="{{ url_for('the_mall') }}" {% if request.endpoint == 'the_mall' %}class="active"{% endif %}>The Mall</a></li>
+                    <li><a href="/about" {% if request.endpoint == 'about' %}class="active"{% endif %}>About</a></li>
                 </ul>
             </div>
         </nav>
