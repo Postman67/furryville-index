@@ -3,6 +3,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🐾 Furryville Index loaded successfully!');
     
+    // Pagination state
+    window.paginationState = {
+        currentPage: 1,
+        itemsPerPage: 20,
+        totalItems: 0,
+        totalPages: 0,
+        allData: []
+    };
+    
     // Add smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -92,8 +101,17 @@ async function loadShopData() {
         const data = await response.json();
         console.log('Shop data loaded:', data);
         
-        // Update table with database data
-        updateShopTable(data.shops || []);
+        // Store all data for pagination
+        window.paginationState.allData = data.shops || [];
+        window.paginationState.totalItems = window.paginationState.allData.length;
+        window.paginationState.totalPages = Math.ceil(window.paginationState.totalItems / window.paginationState.itemsPerPage);
+        window.paginationState.currentPage = 1;
+        
+        // Update table with first page of data
+        updateShopTable();
+        
+        // Setup pagination controls
+        setupPagination();
         
         hideLoadingIndicator();
         showNotification(`Loaded ${data.shops?.length || 0} shops from database`, 'success');
@@ -108,22 +126,27 @@ async function loadShopData() {
     }
 }
 
-// Update shop table with database data
-function updateShopTable(shops) {
+// Update shop table with current page data
+function updateShopTable() {
     const tableBody = document.querySelector('#shopTable tbody');
     if (!tableBody) return;
+    
+    const { currentPage, itemsPerPage, allData } = window.paginationState;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageData = allData.slice(startIndex, endIndex);
     
     // Clear existing rows
     tableBody.innerHTML = '';
     
-    if (shops.length === 0) {
+    if (pageData.length === 0) {
         // Don't show any message - just leave table empty
         console.log('No shops in database - table left empty');
         return;
     }
     
-    // Add database rows
-    shops.forEach(shop => {
+    // Add database rows for current page
+    pageData.forEach(shop => {
         const row = document.createElement('tr');
         
         // Handle different table structures
@@ -148,7 +171,7 @@ function updateShopTable(shops) {
         tableBody.appendChild(row);
     });
     
-    console.log(`Updated table with ${shops.length} shops from database`);
+    console.log(`Updated table with ${pageData.length} shops from database (page ${currentPage})`);
 }
 
 // Show loading indicator
@@ -394,5 +417,111 @@ async function checkDatabaseStatus() {
             <span class="status-icon">❌</span>
             <span class="status-text">Database offline</span>
         `;
+    }
+}
+
+// Pagination Functions
+function setupPagination() {
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    
+    if (!prevBtn || !nextBtn) return;
+    
+    // Add event listeners
+    prevBtn.addEventListener('click', () => {
+        if (window.paginationState.currentPage > 1) {
+            window.paginationState.currentPage--;
+            updateShopTable();
+        }
+    });
+    
+    nextBtn.addEventListener('click', () => {
+        if (window.paginationState.currentPage < window.paginationState.totalPages) {
+            window.paginationState.currentPage++;
+            updateShopTable();
+        }
+    });
+    
+    // Add click handlers for page numbers
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('page-number') && !e.target.classList.contains('current')) {
+            const pageNum = parseInt(e.target.textContent);
+            if (pageNum && pageNum <= window.paginationState.totalPages) {
+                window.paginationState.currentPage = pageNum;
+                updateShopTable();
+            }
+        }
+    });
+    
+    updatePaginationDisplay();
+}
+
+function updatePaginationDisplay() {
+    const { currentPage, totalPages } = window.paginationState;
+    
+    // Update button states
+    const prevBtn = document.getElementById('prevPage');
+    const nextBtn = document.getElementById('nextPage');
+    
+    if (prevBtn) {
+        prevBtn.disabled = currentPage === 1;
+    }
+    
+    if (nextBtn) {
+        nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+    }
+    
+    // Update page numbers
+    const currentPageEl = document.getElementById('currentPage');
+    const firstPageEl = document.getElementById('firstPage');
+    const lastPageEl = document.getElementById('lastPage');
+    const prevPageNumEl = document.getElementById('prevPageNum');
+    const nextPageNumEl = document.getElementById('nextPageNum');
+    const leftDotsEl = document.getElementById('leftDots');
+    const rightDotsEl = document.getElementById('rightDots');
+    
+    if (!currentPageEl) return;
+    
+    currentPageEl.textContent = currentPage;
+    
+    // Hide all elements initially
+    [firstPageEl, lastPageEl, prevPageNumEl, nextPageNumEl, leftDotsEl, rightDotsEl].forEach(el => {
+        if (el) el.style.display = 'none';
+    });
+    
+    if (totalPages <= 1) return;
+    
+    // Show first page if not current and not adjacent
+    if (currentPage > 3 && firstPageEl) {
+        firstPageEl.style.display = 'inline';
+        firstPageEl.textContent = '1';
+    }
+    
+    // Show left dots if there's a gap
+    if (currentPage > 4 && leftDotsEl) {
+        leftDotsEl.style.display = 'inline';
+    }
+    
+    // Show previous page number
+    if (currentPage > 1 && prevPageNumEl) {
+        prevPageNumEl.style.display = 'inline';
+        prevPageNumEl.textContent = currentPage - 1;
+    }
+    
+    // Show next page number
+    if (currentPage < totalPages && nextPageNumEl) {
+        nextPageNumEl.style.display = 'inline';
+        nextPageNumEl.textContent = currentPage + 1;
+    }
+    
+    // Show right dots if there's a gap
+    if (currentPage < totalPages - 3 && rightDotsEl) {
+        rightDotsEl.style.display = 'inline';
+    }
+    
+    // Show last page if not current and not adjacent
+    if (currentPage < totalPages - 2 && lastPageEl) {
+        lastPageEl.style.display = 'inline';
+        lastPageEl.textContent = totalPages;
     }
 }

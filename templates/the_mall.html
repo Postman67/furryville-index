@@ -41,6 +41,25 @@
                     <tbody>
                         <!-- Table will be populated by JavaScript with database data -->
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="5" class="pagination-footer">
+                                <div class="pagination-controls">
+                                    <button id="prevPage" class="pagination-btn prev-btn" disabled>‹</button>
+                                    <div class="pagination-info">
+                                        <span id="firstPage" class="page-number">1</span>
+                                        <span id="leftDots" class="dots">...</span>
+                                        <span id="prevPageNum" class="page-number"></span>
+                                        <span id="currentPage" class="page-number current">1</span>
+                                        <span id="nextPageNum" class="page-number"></span>
+                                        <span id="rightDots" class="dots">...</span>
+                                        <span id="lastPage" class="page-number"></span>
+                                    </div>
+                                    <button id="nextPage" class="pagination-btn next-btn">›</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </section>
