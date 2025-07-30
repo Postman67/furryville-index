@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
         itemsPerPage: 20,
         totalItems: 0,
         totalPages: 0,
-        allData: []
+        allData: [],
+        filteredData: null // null means no filter, use allData
     };
     
     // Add smooth scrolling for anchor links
@@ -103,6 +104,7 @@ async function loadShopData() {
         
         // Store all data for pagination
         window.paginationState.allData = data.shops || [];
+        window.paginationState.filteredData = null; // Reset filter
         window.paginationState.totalItems = window.paginationState.allData.length;
         window.paginationState.totalPages = Math.ceil(window.paginationState.totalItems / window.paginationState.itemsPerPage);
         window.paginationState.currentPage = 1;
@@ -131,10 +133,11 @@ function updateShopTable() {
     const tableBody = document.querySelector('#shopTable tbody');
     if (!tableBody) return;
     
-    const { currentPage, itemsPerPage, allData } = window.paginationState;
+    const { currentPage, itemsPerPage } = window.paginationState;
+    const dataToUse = window.paginationState.filteredData || window.paginationState.allData;
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const pageData = allData.slice(startIndex, endIndex);
+    const pageData = dataToUse.slice(startIndex, endIndex);
     
     // Clear existing rows
     tableBody.innerHTML = '';
@@ -172,6 +175,14 @@ function updateShopTable() {
     });
     
     console.log(`Updated table with ${pageData.length} shops from database (page ${currentPage})`);
+    
+    // Update pagination display after table update
+    updatePaginationDisplay();
+}
+
+// Update table with filtered data (used by search)
+function updateShopTableWithFilteredData() {
+    updateShopTable(); // Same logic, but uses filteredData when available
 }
 
 // Show loading indicator
@@ -276,33 +287,36 @@ function initializeSearch() {
 
 // Filter table based on search term
 function filterTable(searchTerm) {
-    const table = document.getElementById('shopTable');
-    if (!table) return;
-
-    const rows = table.querySelectorAll('tbody tr');
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        let rowText = '';
-        
-        // Combine all cell text for searching
-        cells.forEach(cell => {
-            rowText += cell.textContent.toLowerCase() + ' ';
+    if (!window.paginationState || !window.paginationState.allData) return;
+    
+    if (searchTerm === '') {
+        // Reset to show all data
+        window.paginationState.filteredData = window.paginationState.allData;
+    } else {
+        // Filter the entire dataset
+        window.paginationState.filteredData = window.paginationState.allData.filter(shop => {
+            const searchableText = [
+                shop.StallNumber,
+                shop.StallName,
+                shop.IGN,
+                shop.StreetName,
+                shop.ItemsSold
+            ].join(' ').toLowerCase();
+            
+            return searchableText.includes(searchTerm);
         });
-
-        if (searchTerm === '' || rowText.includes(searchTerm)) {
-            row.classList.remove('hidden');
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.classList.add('hidden');
-            row.style.display = 'none';
-        }
-    });
-
-    // Show no results message if needed
-    updateNoResultsMessage(visibleCount, searchTerm);
+    }
+    
+    // Update pagination with filtered data
+    window.paginationState.totalItems = window.paginationState.filteredData.length;
+    window.paginationState.totalPages = Math.ceil(window.paginationState.totalItems / window.paginationState.itemsPerPage);
+    window.paginationState.currentPage = 1; // Reset to first page
+    
+    // Update table display
+    updateShopTableWithFilteredData();
+    
+    // Update pagination display
+    updatePaginationDisplay();
 }
 
 // Update no results message
@@ -465,10 +479,20 @@ function updatePaginationDisplay() {
     
     if (prevBtn) {
         prevBtn.disabled = currentPage === 1;
+        if (currentPage === 1) {
+            prevBtn.classList.add('disabled');
+        } else {
+            prevBtn.classList.remove('disabled');
+        }
     }
     
     if (nextBtn) {
         nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+        if (currentPage === totalPages || totalPages === 0) {
+            nextBtn.classList.add('disabled');
+        } else {
+            nextBtn.classList.remove('disabled');
+        }
     }
     
     // Update page numbers
@@ -524,4 +548,6 @@ function updatePaginationDisplay() {
         lastPageEl.style.display = 'inline';
         lastPageEl.textContent = totalPages;
     }
+    
+    console.log(`Pagination updated: Page ${currentPage} of ${totalPages}`);
 }

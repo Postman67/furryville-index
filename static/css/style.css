@@ -421,10 +421,17 @@ body {
     color: #000;
 }
 
-.pagination-btn:disabled {
-    color: #666;
-    cursor: not-allowed;
+.pagination-btn:disabled,
+.pagination-btn.disabled {
+    color: #666 !important;
+    cursor: not-allowed !important;
     opacity: 0.5;
+}
+
+.pagination-btn:disabled:hover,
+.pagination-btn.disabled:hover {
+    background: none !important;
+    color: #666 !important;
 }
 
 .pagination-info {
