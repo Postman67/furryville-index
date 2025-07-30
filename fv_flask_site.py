@@ -25,7 +25,7 @@ def get_db_connection():
 @app.route('/')
 def home():
     """Home endpoint - serves the main page"""
-    return render_template('index.html', title='Furryville - Home',message='Welcome to Furryville!')
+    return render_template('index.html', title='Furryville - Home',message='This website is currently in BETA!')
 
 @app.route('/warp-hall')
 def warp_hall():
