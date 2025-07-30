@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Pagination state
     window.paginationState = {
         currentPage: 1,
-        itemsPerPage: 20,
+        itemsPerPage: 10,
         totalItems: 0,
         totalPages: 0,
         allData: []
