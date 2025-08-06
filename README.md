@@ -16,7 +16,7 @@ Table Name: warp_hall
 
 ## The Mall Entry format
 Table Name: the_mall
-The Mall uses a compaoite priamry key to faciliate duplicate stall numbers relative to the street
+\nThe Mall uses a compaoite priamry key to faciliate duplicate stall numbers relative to the street
 - Stall Number (StallNumber) (the_mall_pk)
 - Street Name (StreetName) (the_mall_pk)
 - Owner IGN (IGN)
