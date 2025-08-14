@@ -15,10 +15,10 @@ Table Name: warp_hall
 - Stall Name (StallName)
 
 ## The Mall Entry format
-Table Name: the_mall
-
+Table Name: the_mall  
+The Mall uses a composite priamry key to handle duplicate stall numbers relative to the street
 - Stall Number (StallNumber) (the_mall_pk)
-- Street Name (StreetName)
+- Street Name (StreetName) (the_mall_pk)
 - Owner IGN (IGN)
 - Stall Name (StallName)
 - Items Sold (ItemsSold)
