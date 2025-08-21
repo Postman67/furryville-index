@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or 'Stall Details - Furryville Index' }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stall.css') }}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content">
+        <div class="hero-section">
+            <div class="breadcrumb">
+                <a href="{{ url_for('home') }}">Home</a>
+                <span class="separator">›</span>
+                {% if location == 'warp-hall' %}
+                    <a href="{{ url_for('warp_hall') }}">Warp Hall</a>
+                    <span class="separator">›</span>
+                    <span class="current">Stall {{ stall.StallNumber }}</span>
+                {% elif location == 'the-mall' %}
+                    <a href="{{ url_for('the_mall') }}">The Mall</a>
+                    <span class="separator">›</span>
+                    <span class="current">{{ stall.StreetName }} - Stall {{ stall.StallNumber }}</span>
+                {% endif %}
+            </div>
+            
+            <h1>{{ stall.StallName or 'Unnamed Stall' }}</h1>
+            <p class="location-badge">
+                {% if location == 'warp-hall' %}
+                    🌀 Located in the Warp Hall
+                {% elif location == 'the-mall' %}
+                    🛍️ Located in The Mall{% if stall.StreetName %} on {{ stall.StreetName }}{% endif %}
+                {% endif %}
+            </p>
+        </div>
+
+        <section class="stall-details">
+            <div class="stall-card">
+                <div class="stall-header">
+                    <div class="stall-number">
+                        <span class="label">Stall #</span>
+                        <span class="value">{{ stall.StallNumber }}</span>
+                    </div>
+                    <div class="owner-info">
+                        <span class="label">Owner</span>
+                        <span class="value">{{ stall.IGN or 'Unknown' }}</span>
+                    </div>
+                </div>
+
+                <div class="stall-info">
+                    <div class="info-row">
+                        <span class="label">Stall Name:</span>
+                        <span class="value">{{ stall.StallName or 'Unnamed Stall' }}</span>
+                    </div>
+                    
+                    {% if location == 'the-mall' and stall.StreetName %}
+                    <div class="info-row">
+                        <span class="label">Street:</span>
+                        <span class="value">{{ stall.StreetName }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if location == 'the-mall' and stall.ItemsSold %}
+                    <div class="info-row">
+                        <span class="label">Items Sold:</span>
+                        <span class="value">{{ stall.ItemsSold }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="info-row">
+                        <span class="label">Location:</span>
+                        <span class="value">{{ stall.Location }}</span>
+                    </div>
+                </div>
+
+                <div class="stall-actions">
+                    <button class="action-btn primary" onclick="copyStallLink()">
+                        📋 Copy Link
+                    </button>
+                    <button class="action-btn secondary" onclick="goBack()">
+                        ← Back to {{ stall.Location }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="stall-map">
+                <div class="map-placeholder">
+                    <h3>📍 Find this stall</h3>
+                    <p>Stall {{ stall.StallNumber }} in {{ stall.Location }}</p>
+                    {% if location == 'the-mall' and stall.StreetName %}
+                        <p class="street-info">Located on {{ stall.StreetName }}</p>
+                    {% endif %}
+                    <div class="map-instructions">
+                        <p>🎮 In-game coordinates and directions could be added here</p>
+                        <p>🗺️ Interactive map coming soon!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="related-stalls">
+            <h2>Other stalls nearby</h2>
+            <div class="nearby-stalls" id="nearbyStalls">
+                <p>Loading nearby stalls...</p>
+            </div>
+        </section>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <script>
+        // Copy stall link to clipboard
+        function copyStallLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showNotification('Link copied to clipboard!', 'success');
+            }).catch(() => {
+                showNotification('Failed to copy link', 'error');
+            });
+        }
+
+        // Go back to location page
+        function goBack() {
+            {% if location == 'warp-hall' %}
+                window.location.href = "{{ url_for('warp_hall') }}";
+            {% elif location == 'the-mall' %}
+                window.location.href = "{{ url_for('the_mall') }}";
+            {% endif %}
+        }
+
+        // Simple notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                transition: all 0.3s ease;
+                ${type === 'success' ? 'background: #22c55e;' : 'background: #ef4444;'}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Load nearby stalls (placeholder for future feature)
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('nearbyStalls').innerHTML = `
+                    <p>🚧 Nearby stalls feature coming soon!</p>
+                    <p>This will show other stalls in the same area.</p>
+                `;
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

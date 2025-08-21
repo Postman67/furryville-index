@@ -384,6 +384,16 @@ body {
     background-color: rgba(135, 206, 235, 0.1);
 }
 
+.shop-table tbody tr.clickable-row {
+    cursor: pointer;
+}
+
+.shop-table tbody tr.clickable-row:hover {
+    background-color: rgba(255, 215, 0, 0.1);
+    transform: scale(1.01);
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
 .shop-table tbody tr:nth-child(even) {
     background-color: rgba(255, 255, 255, 0.05);
 }
@@ -466,6 +476,78 @@ body {
     color: #555;
     font-weight: bold;
     padding: 0.3rem;
+}
+
+/* Error Pages */
+.error-section {
+    margin: 3rem 0;
+    display: flex;
+    justify-content: center;
+}
+
+.error-card {
+    background: rgba(45, 45, 45, 0.95);
+    padding: 3rem;
+    border-radius: 15px;
+    border: 1px solid #555;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 600px;
+}
+
+.error-card h2 {
+    color: #ef4444;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.error-card p {
+    color: #c0c0c0;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-actions .action-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-actions .action-btn.primary {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #1a1a1a;
+}
+
+.error-actions .action-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+}
+
+.error-actions .action-btn.secondary {
+    background: rgba(135, 206, 235, 0.2);
+    color: #87ceeb;
+    border: 1px solid #87ceeb;
+}
+
+.error-actions .action-btn.secondary:hover {
+    background: rgba(135, 206, 235, 0.3);
+    transform: translateY(-2px);
 }
 
 .status-badge {
