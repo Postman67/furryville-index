@@ -279,8 +279,11 @@ class CubeAnimationSystem {
         this.cubes = [];
         this.lastTime = 0;
         this.spawnTimer = 0;
+        this.isRunning = true;
+        this.animationId = null;
         
         this.setupContainer();
+        this.setupToggle();
         this.start();
     }
     
@@ -297,6 +300,46 @@ class CubeAnimationSystem {
         this.container.appendChild(cubeBackground);
     }
     
+    setupToggle() {
+        const toggle = document.getElementById('cubeToggle');
+        if (toggle) {
+            // Load saved preference from localStorage
+            const savedState = localStorage.getItem('cubeAnimationEnabled');
+            if (savedState !== null) {
+                const isEnabled = savedState === 'true';
+                toggle.checked = isEnabled;
+                this.isRunning = isEnabled;
+                if (!isEnabled) {
+                    this.hideAllCubes();
+                }
+            }
+            
+            // Listen for toggle changes
+            toggle.addEventListener('change', () => {
+                this.isRunning = toggle.checked;
+                localStorage.setItem('cubeAnimationEnabled', this.isRunning.toString());
+                
+                if (!this.isRunning) {
+                    this.hideAllCubes();
+                } else {
+                    this.showAllCubes();
+                }
+            });
+        }
+    }
+    
+    hideAllCubes() {
+        this.cubes.forEach(cube => {
+            cube.element.style.display = 'none';
+        });
+    }
+    
+    showAllCubes() {
+        this.cubes.forEach(cube => {
+            cube.element.style.display = 'block';
+        });
+    }
+    
     start() {
         this.animate(0);
     }
@@ -305,23 +348,27 @@ class CubeAnimationSystem {
         const deltaTime = Math.min((currentTime - this.lastTime) / 1000, 0.016); // Cap at 60fps
         this.lastTime = currentTime;
         
-        // Spawn new cubes
-        this.spawnTimer += deltaTime;
-        if (this.spawnTimer >= 1 / CUBE_CONFIG.SPAWN_RATE && this.cubes.length < CUBE_CONFIG.MAX_CUBES) {
-            this.cubes.push(new FloatingCube(this.container));
-            this.spawnTimer = 0;
+        // Only update if animation is running
+        if (this.isRunning) {
+            // Spawn new cubes
+            this.spawnTimer += deltaTime;
+            if (this.spawnTimer >= 1 / CUBE_CONFIG.SPAWN_RATE && this.cubes.length < CUBE_CONFIG.MAX_CUBES) {
+                const newCube = new FloatingCube(this.container);
+                this.cubes.push(newCube);
+                this.spawnTimer = 0;
+            }
+            
+            // Update existing cubes
+            this.cubes = this.cubes.filter(cube => {
+                const shouldKeep = cube.update(deltaTime, this.cubes);
+                if (!shouldKeep) {
+                    cube.destroy();
+                }
+                return shouldKeep;
+            });
         }
         
-        // Update existing cubes
-        this.cubes = this.cubes.filter(cube => {
-            const shouldKeep = cube.update(deltaTime, this.cubes);
-            if (!shouldKeep) {
-                cube.destroy();
-            }
-            return shouldKeep;
-        });
-        
-        requestAnimationFrame(this.animate.bind(this));
+        this.animationId = requestAnimationFrame(this.animate.bind(this));
     }
 }
 
