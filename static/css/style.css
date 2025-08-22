@@ -36,10 +36,36 @@ body {
     padding: 1rem 2rem;
 }
 
+.nav-title-link {
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.3s ease;
+}
+
+.nav-title-link:hover {
+    opacity: 0.8;
+}
+
 .nav-title {
     color: #ffd700;
     font-size: 1.5rem;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.nav-logo {
+    height: 2rem;
+    width: auto;
+    object-fit: contain;
+    filter: brightness(1.1);
+    transition: filter 0.3s ease;
+}
+
+.nav-logo:hover {
+    filter: brightness(1.3);
 }
 
 .nav-menu {
