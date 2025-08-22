@@ -181,3 +181,4 @@ cython_debug/
 .cursorindexingignore
 
 .vscode/
+/static/images/city-logo-full.psd
