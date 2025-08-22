@@ -42,6 +42,86 @@ def about():
     """About page"""
     return render_template('about.html', title='About - Furryville', message='Learn more about Furryville.')
 
+@app.route('/stall/warp-hall/<int:stall_number>')
+def warp_hall_stall(stall_number):
+    """Dynamic stall page for Warp Hall"""
+    # Get stall data from database
+    conn = get_db_connection()
+    if not conn:
+        return render_template('500.html'), 500
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT StallNumber, IGN, StallName FROM warp_hall WHERE StallNumber = %s", (stall_number,))
+        result = cursor.fetchone()
+        
+        if result:
+            stall_data = {
+                "StallNumber": result[0],
+                "IGN": result[1],
+                "StallName": result[2],
+                "Location": "Warp Hall"
+            }
+        else:
+            cursor.close()
+            conn.close()
+            return render_template('404.html'), 404
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('stall.html', 
+                             stall=stall_data, 
+                             location='warp-hall',
+                             title=f"{stall_data['StallName']} - {stall_data['Location']}")
+        
+    except mariadb.Error as e:
+        print(f"Error querying stall data: {e}")
+        if conn:
+            conn.close()
+        return render_template('500.html'), 500
+
+@app.route('/stall/the-mall/<street_name>/<int:stall_number>')
+def the_mall_stall(street_name, stall_number):
+    """Dynamic stall page for The Mall"""
+    # Get stall data from database
+    conn = get_db_connection()
+    if not conn:
+        return render_template('500.html'), 500
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT StallNumber, StreetName, IGN, StallName, ItemsSold FROM the_mall WHERE StallNumber = %s AND StreetName = %s", (stall_number, street_name))
+        result = cursor.fetchone()
+        
+        if result:
+            stall_data = {
+                "StallNumber": result[0],
+                "StreetName": result[1],
+                "IGN": result[2],
+                "StallName": result[3],
+                "ItemsSold": result[4],
+                "Location": "The Mall"
+            }
+        else:
+            cursor.close()
+            conn.close()
+            return render_template('404.html'), 404
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('stall.html', 
+                             stall=stall_data, 
+                             location='the-mall',
+                             title=f"{stall_data['StallName']} - {stall_data['Location']}")
+        
+    except mariadb.Error as e:
+        print(f"Error querying stall data: {e}")
+        if conn:
+            conn.close()
+        return render_template('500.html'), 500
+
 @app.route('/api/warp-hall')
 def api_warp_hall():
     """API endpoint to get Warp Hall shop data"""
@@ -120,6 +200,75 @@ def api_the_mall():
         return jsonify({
             "error": "Database query failed",
             "shops": []
+        }), 500
+
+@app.route('/api/reviews/<location>/<path:identifier>')
+def api_reviews(location, identifier):
+    """API endpoint to get reviews for a specific stall"""
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({
+            "error": "Database connection failed",
+            "reviews": []
+        }), 500
+    
+    try:
+        cursor = conn.cursor()
+        
+        if location == 'the-mall':
+            # For The Mall, identifier should be "street_name/stall_number"
+            try:
+                street_name, stall_number = identifier.rsplit('/', 1)
+                stall_number = int(stall_number)
+            except (ValueError, TypeError):
+                return jsonify({
+                    "error": "Invalid stall identifier format",
+                    "reviews": []
+                }), 400
+            
+            cursor.execute("""
+                SELECT ReviewID, StallNumber, StreetName, ReviewerName, ReviewText, Rating, CreatedAt, UpdatedAt 
+                FROM the_mall_reviews 
+                WHERE StallNumber = %s AND StreetName = %s 
+                ORDER BY CreatedAt DESC
+            """, (stall_number, street_name))
+            
+        else:
+            # For now, only The Mall has reviews
+            return jsonify({
+                "message": "Reviews not available for this location",
+                "reviews": []
+            })
+        
+        reviews = []
+        for (review_id, stall_num, street, reviewer, review_text, rating, created_at, updated_at) in cursor:
+            reviews.append({
+                "ReviewID": review_id,
+                "StallNumber": stall_num,
+                "StreetName": street,
+                "ReviewerName": reviewer,
+                "ReviewText": review_text,
+                "Rating": rating,
+                "CreatedAt": created_at.isoformat() if created_at else None,
+                "UpdatedAt": updated_at.isoformat() if updated_at else None
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "reviews": reviews,
+            "count": len(reviews),
+            "average_rating": sum(r["Rating"] for r in reviews) / len(reviews) if reviews else 0
+        })
+        
+    except mariadb.Error as e:
+        print(f"Error querying reviews: {e}")
+        if conn:
+            conn.close()
+        return jsonify({
+            "error": "Database query failed",
+            "reviews": []
         }), 500
 
 @app.route('/api/status')

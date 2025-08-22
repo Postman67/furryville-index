@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or 'Stall Details - Furryville Index' }}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stall.css') }}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="main-content">
+        <div class="hero-section">
+            <div class="breadcrumb">
+                <a href="{{ url_for('home') }}">Home</a>
+                <span class="separator">›</span>
+                {% if location == 'warp-hall' %}
+                    <a href="{{ url_for('warp_hall') }}">Warp Hall</a>
+                    <span class="separator">›</span>
+                    <span class="current">Stall {{ stall.StallNumber }}</span>
+                {% elif location == 'the-mall' %}
+                    <a href="{{ url_for('the_mall') }}">The Mall</a>
+                    <span class="separator">›</span>
+                    <span class="current">{{ stall.StreetName }} - Stall {{ stall.StallNumber }}</span>
+                {% endif %}
+            </div>
+            
+            <h1>{{ stall.StallName or 'Unnamed Stall' }}</h1>
+            <p class="location-badge">
+                {% if location == 'warp-hall' %}
+                    🌀 Located in the Warp Hall
+                {% elif location == 'the-mall' %}
+                    🛍️ Located in The Mall{% if stall.StreetName %} on {{ stall.StreetName }}{% endif %}
+                {% endif %}
+            </p>
+        </div>
+
+        <section class="stall-details">
+            <div class="stall-card">
+                <div class="stall-header">
+                    <div class="stall-number">
+                        <span class="label">Stall #</span>
+                        <span class="value">{{ stall.StallNumber }}</span>
+                    </div>
+                    <div class="owner-info">
+                        <span class="label">Owner</span>
+                        <span class="value">{{ stall.IGN or 'Unknown' }}</span>
+                    </div>
+                </div>
+
+                <div class="stall-info">
+                    <div class="info-row">
+                        <span class="label">Stall Name:</span>
+                        <span class="value">{{ stall.StallName or 'Unnamed Stall' }}</span>
+                    </div>
+                    
+                    {% if location == 'the-mall' and stall.StreetName %}
+                    <div class="info-row">
+                        <span class="label">Street:</span>
+                        <span class="value">{{ stall.StreetName }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if location == 'the-mall' and stall.ItemsSold %}
+                    <div class="info-row">
+                        <span class="label">Items Sold:</span>
+                        <span class="value">{{ stall.ItemsSold }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="info-row">
+                        <span class="label">Location:</span>
+                        <span class="value">{{ stall.Location }}</span>
+                    </div>
+                </div>
+
+                <div class="stall-actions">
+                    <button class="action-btn primary" onclick="copyStallLink()">
+                        📋 Copy Link
+                    </button>
+                    <button class="action-btn secondary" onclick="goBack()">
+                        ← Back to {{ stall.Location }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="review-instructions">
+                <div class="instructions-card">
+                    <h3>Leave a Review</h3>
+                    <p>You can leave a review of this stall by joining the furryville Discord and running /review!</p>
+                        <button class="discord-join-btn" onclick="window.open('https://discord.gg/FnuupnnhHJ', '_blank')">
+                            JOIN
+                        </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="stall-reviews">
+            <h2>Customer Reviews</h2>
+            <div class="reviews-summary" id="reviewsSummary">
+                <div class="average-rating">
+                    <span class="rating-value">-</span>
+                    <div class="stars" id="averageStars"></div>
+                    <span class="review-count">No reviews yet</span>
+                </div>
+            </div>
+            <div class="reviews-list" id="reviewsList">
+                <p class="loading-reviews">Loading reviews...</p>
+            </div>
+        </section>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <script>
+        // Copy stall link to clipboard
+        function copyStallLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showNotification('Link copied to clipboard!', 'success');
+            }).catch(() => {
+                showNotification('Failed to copy link', 'error');
+            });
+        }
+
+        // Go back to location page
+        function goBack() {
+            {% if location == 'warp-hall' %}
+                window.location.href = "{{ url_for('warp_hall') }}";
+            {% elif location == 'the-mall' %}
+                window.location.href = "{{ url_for('the_mall') }}";
+            {% endif %}
+        }
+
+        // Simple notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                transition: all 0.3s ease;
+                ${type === 'success' ? 'background: #22c55e;' : 'background: #ef4444;'}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Load reviews for this stall
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStallReviews();
+        });
+
+        function loadStallReviews() {
+            const location = '{{ location }}';
+            {% if location == 'the-mall' %}
+                const streetName = '{{ stall.StreetName }}';
+                const stallNumber = '{{ stall.StallNumber }}';
+                const identifier = `${encodeURIComponent(streetName)}/${stallNumber}`;
+            {% else %}
+                // Warp Hall doesn't have reviews yet
+                const identifier = '{{ stall.StallNumber }}';
+            {% endif %}
+            
+            const apiUrl = `/api/reviews/${location}/${identifier}`;
+            
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    displayReviews(data);
+                })
+                .catch(error => {
+                    console.error('Error loading reviews:', error);
+                    displayReviewsError();
+                });
+        }
+
+        function displayReviews(data) {
+            const reviewsList = document.getElementById('reviewsList');
+            const reviewsSummary = document.getElementById('reviewsSummary');
+            const averageStars = document.getElementById('averageStars');
+            
+            if (data.reviews && data.reviews.length > 0) {
+                // Update summary
+                const avgRating = data.average_rating.toFixed(1);
+                const reviewCount = data.count;
+                
+                reviewsSummary.innerHTML = `
+                    <div class="average-rating">
+                        <span class="rating-value">${avgRating}</span>
+                        <div class="stars">${generateStars(data.average_rating)}</div>
+                        <span class="review-count">${reviewCount} review${reviewCount !== 1 ? 's' : ''}</span>
+                    </div>
+                `;
+                
+                // Display reviews
+                const reviewsHtml = data.reviews.map(review => `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="reviewer-name">${escapeHtml(review.ReviewerName)}</span>
+                            <div class="review-rating">${generateStars(review.Rating)}</div>
+                            <div class="review-dates">
+                                <span class="review-date">${formatDate(review.CreatedAt)}</span>
+                                ${review.UpdatedAt ? `<span class="review-updated">updated on ${formatDate(review.UpdatedAt)}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="review-text">
+                            ${escapeHtml(review.ReviewText)}
+                        </div>
+                    </div>
+                `).join('');
+                
+                reviewsList.innerHTML = reviewsHtml;
+            } else {
+                reviewsSummary.innerHTML = `
+                    <div class="average-rating">
+                        <span class="rating-value">-</span>
+                        <div class="stars">${generateStars(0)}</div>
+                        <span class="review-count">No reviews yet</span>
+                    </div>
+                `;
+                reviewsList.innerHTML = '<p class="no-reviews">This stall hasn\'t received any reviews yet. Be the first to leave one!</p>';
+            }
+        }
+
+        function displayReviewsError() {
+            const reviewsList = document.getElementById('reviewsList');
+            reviewsList.innerHTML = '<p class="error-reviews">Unable to load reviews at this time. Please try again later.</p>';
+        }
+
+        function generateStars(rating) {
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    starsHtml += '<span class="star filled">★</span>';
+                } else if (i - 0.5 <= rating) {
+                    starsHtml += '<span class="star half">★</span>';
+                } else {
+                    starsHtml += '<span class="star empty">☆</span>';
+                }
+            }
+            return starsHtml;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Unknown date';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>
