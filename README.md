@@ -22,3 +22,14 @@ The Mall uses a composite priamry key to handle duplicate stall numbers relative
 - Owner IGN (IGN)
 - Stall Name (StallName)
 - Items Sold (ItemsSold)
+
+## The Mall Review entry format
+Table Name: the_mall_reviews
+- ReviewID (INT)
+- StallNumber (INT)
+- StreetName (String)
+- ReviewerName (String)
+- ReviewText (String) (Review Text)
+- Rating (INT)
+- CreatedAt (DATETIME)
+- UpdatedAt (DATETIME)
