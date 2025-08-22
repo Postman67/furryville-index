@@ -10,3 +10,5 @@
 
 ## Interactive Map
 - We make this???
+
+## Better visuals

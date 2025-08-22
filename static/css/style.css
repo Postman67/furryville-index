@@ -25,6 +25,7 @@ body {
     top: 0;
     z-index: 1000;
     border-bottom: 2px solid #ffd700;
+    overflow: hidden; /* Contain animated cubes */
 }
 
 .nav-container {

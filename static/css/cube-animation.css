@@ -1,0 +1,107 @@
+/* Animated Cube Background System */
+
+.cube-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.floating-cube {
+    position: absolute;
+    background: rgba(65, 65, 65, 0.25); /* Lighter cube color */
+    border: 1px solid rgba(75, 75, 75, 0.3);
+    box-shadow: 
+        inset 0 0 0 1px rgba(85, 85, 85, 0.2),
+        0 0 10px rgba(0, 0, 0, 0.1);
+    transform-style: preserve-3d;
+    transition: none;
+    pointer-events: none;
+}
+
+/* Layer-based styling for depth effect */
+.floating-cube[style*="z-index: 0"] {
+    filter: blur(0.5px) brightness(0.8);
+}
+
+.floating-cube[style*="z-index: 1"] {
+    filter: none;
+}
+
+.floating-cube[style*="z-index: 2"] {
+    filter: brightness(1.2) contrast(1.1);
+    box-shadow: 
+        inset 0 0 0 1px rgba(85, 85, 85, 0.3),
+        0 0 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Cube size variations */
+.floating-cube.size-small {
+    width: 12px;
+    height: 12px;
+}
+
+.floating-cube.size-medium {
+    width: 20px;
+    height: 20px;
+}
+
+.floating-cube.size-large {
+    width: 32px;
+    height: 32px;
+}
+
+.floating-cube.size-xlarge {
+    width: 48px;
+    height: 48px;
+}
+
+/* Rotation animations for different cube types */
+.floating-cube.rotate-slow {
+    animation: rotateSlow 8s linear infinite;
+}
+
+.floating-cube.rotate-medium {
+    animation: rotateMedium 5s linear infinite;
+}
+
+.floating-cube.rotate-fast {
+    animation: rotateFast 3s linear infinite;
+}
+
+@keyframes rotateSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotateMedium {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotateFast {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Collision flash effect */
+.floating-cube.collision {
+    background: rgba(135, 206, 235, 0.4) !important;
+    border-color: rgba(135, 206, 235, 0.6) !important;
+    animation: collisionFlash 0.3s ease-out;
+}
+
+@keyframes collisionFlash {
+    0% { 
+        background: rgba(255, 215, 0, 0.6);
+        transform: scale(1.2);
+    }
+    100% { 
+        background: rgba(65, 65, 65, 0.25);
+        transform: scale(1);
+    }
+}
