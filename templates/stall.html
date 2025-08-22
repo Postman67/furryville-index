@@ -86,16 +86,12 @@
                 </div>
             </div>
 
-            <div class="stall-map">
-                <div class="map-placeholder">
-                    <h3>📍 Find this stall</h3>
-                    <p>Stall {{ stall.StallNumber }} in {{ stall.Location }}</p>
-                    {% if location == 'the-mall' and stall.StreetName %}
-                        <p class="street-info">Located on {{ stall.StreetName }}</p>
-                    {% endif %}
-                    <div class="map-instructions">
-                        <p>🎮 In-game coordinates and directions could be added here</p>
-                        <p>🗺️ Interactive map coming soon!</p>
+            <div class="review-instructions">
+                <div class="instructions-card">
+                    <h3>� Leave a Review</h3>
+                    <p>You can leave a review of this stall by joining the furryville Discord and running /review!</p>
+                    <div class="discord-info">
+                        <p class="instructions-text">Share your experience and help other shoppers discover great stalls!</p>
                     </div>
                 </div>
             </div>
@@ -216,7 +212,10 @@
                         <div class="review-header">
                             <span class="reviewer-name">${escapeHtml(review.ReviewerName)}</span>
                             <div class="review-rating">${generateStars(review.Rating)}</div>
-                            <span class="review-date">${formatDate(review.CreatedAt)}</span>
+                            <div class="review-dates">
+                                <span class="review-date">${formatDate(review.CreatedAt)}</span>
+                                ${review.UpdatedAt ? `<span class="review-updated">updated on ${formatDate(review.UpdatedAt)}</span>` : ''}
+                            </div>
                         </div>
                         <div class="review-text">
                             ${escapeHtml(review.ReviewText)}

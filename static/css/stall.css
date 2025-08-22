@@ -37,7 +37,48 @@
     border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
-/* Stall Details Section */
+/* Review Instructions Section */
+.review-instructions {
+    background: linear-gradient(145deg, #2c2c2c, #262626);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    border: 1px solid #333;
+}
+
+.instructions-card h3 {
+    color: var(--accent-yellow);
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.instructions-card p {
+    color: #ddd;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.discord-info {
+    background: rgba(135, 206, 235, 0.1);
+    border: 1px solid rgba(135, 206, 235, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.instructions-text {
+    color: var(--accent-blue);
+    font-style: italic;
+    margin: 0 !important;
+    font-size: 1rem !important;
+}
+
+/* Stall Map (legacy - keeping for fallback) */
 .stall-details {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -383,10 +424,23 @@
     font-size: 1.1rem;
 }
 
+.review-dates {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: auto;
+    gap: 2px;
+}
+
 .review-date {
     color: #999;
     font-size: 0.9rem;
-    margin-left: auto;
+}
+
+.review-updated {
+    color: #777;
+    font-size: 0.8rem;
+    font-style: italic;
 }
 
 .review-text {
@@ -430,8 +484,9 @@
         gap: 8px;
     }
     
-    .review-date {
+    .review-dates {
         margin-left: 0;
+        align-items: flex-start;
     }
     
     .rating-value {
