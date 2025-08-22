@@ -13,13 +13,13 @@
 
 .floating-cube {
     position: absolute;
-    background: rgba(65, 65, 65, 0.25); /* Lighter cube color */
+    /* Background and border colors will be set dynamically by JavaScript */
     border: 1px solid rgba(75, 75, 75, 0.3);
     box-shadow: 
         inset 0 0 0 1px rgba(85, 85, 85, 0.2),
         0 0 10px rgba(0, 0, 0, 0.1);
     transform-style: preserve-3d;
-    transition: none;
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
     pointer-events: none;
 }
 

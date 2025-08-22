@@ -7,14 +7,14 @@
 
 const CUBE_CONFIG = {
     // Spawn settings
-    SPAWN_RATE: 7,                    // Cubes per second (higher = more cubes)
-    MAX_CUBES: 200,                      // Maximum cubes on screen
+    SPAWN_RATE: 5,                    // Cubes per second (higher = more cubes)
+    MAX_CUBES: 100,                      // Maximum cubes on screen
     
     // Movement physics
     BASE_SPEED: 100,                     // Base leftward movement speed (pixels/second)
-    SPEED_VARIATION: 30,                // Random speed variation (+/- pixels/second)
-    GRAVITY: 5,                        // Downward acceleration
-    BOUNCE_DAMPENING: 0.2,              // Energy loss on collision (0-1)
+    SPEED_VARIATION: 80,                // Random speed variation (+/- pixels/second)
+    GRAVITY: 0.2,                        // Downward acceleration
+    BOUNCE_DAMPENING: 0.7,              // Energy loss on collision (0-1)
     
     // Cube properties
     SIZE_DISTRIBUTION: {
@@ -24,9 +24,36 @@ const CUBE_CONFIG = {
         'xlarge': 0.05                  // 5% extra large cubes
     },
     
+    // Rainbow color system
+    RAINBOW_COLORS: [
+        'rgba(255, 99, 132, 0.6)',      // Pink/Red - more saturated
+        'rgba(255, 159, 64, 0.6)',      // Orange - more saturated
+        'rgba(255, 205, 86, 0.6)',      // Yellow - more saturated
+        'rgba(75, 192, 192, 0.6)',      // Cyan - more saturated
+        'rgba(54, 162, 235, 0.6)',      // Blue - more saturated
+        'rgba(153, 102, 255, 0.6)',     // Purple - more saturated
+        'rgba(255, 20, 147, 0.6)',      // Deep Pink - more saturated
+        'rgba(50, 205, 50, 0.6)',       // Lime Green - more saturated
+        'rgba(255, 69, 0, 0.6)',        // Red Orange - more saturated
+        'rgba(138, 43, 226, 0.6)'       // Blue Violet - more saturated
+    ],
+    
+    RAINBOW_BORDER_COLORS: [
+        'rgba(255, 99, 132, 0.8)',      // Pink/Red border - more saturated
+        'rgba(255, 159, 64, 0.8)',      // Orange border - more saturated
+        'rgba(255, 205, 86, 0.8)',      // Yellow border - more saturated
+        'rgba(75, 192, 192, 0.8)',      // Cyan border - more saturated
+        'rgba(54, 162, 235, 0.8)',      // Blue border - more saturated
+        'rgba(153, 102, 255, 0.8)',     // Purple border - more saturated
+        'rgba(255, 20, 147, 0.8)',      // Deep Pink border - more saturated
+        'rgba(50, 205, 50, 0.8)',       // Lime Green border - more saturated
+        'rgba(255, 69, 0, 0.8)',        // Red Orange border - more saturated
+        'rgba(138, 43, 226, 0.8)'       // Blue Violet border - more saturated
+    ],
+    
     // Collision detection
     COLLISION_THRESHOLD: 5,             // Minimum distance for collision detection
-    COLLISION_RESPONSE: 0.15,           // Collision bounce force multiplier (much lower!)
+    COLLISION_RESPONSE: 0.05,           // Collision bounce force multiplier (much lower!)
     INTERACTION_CHANCE: 0.3,            // Probability cubes will interact (30% interact, 70% pass by)
     
     // Visual effects
@@ -108,6 +135,19 @@ class FloatingCube {
             const rotationSpeed = rotationSpeeds[Math.floor(Math.random() * rotationSpeeds.length)];
             this.element.classList.add(`rotate-${rotationSpeed}`);
         }
+        
+        // Random rainbow color
+        const colorIndex = Math.floor(Math.random() * CUBE_CONFIG.RAINBOW_COLORS.length);
+        this.baseColor = CUBE_CONFIG.RAINBOW_COLORS[colorIndex];
+        this.borderColor = CUBE_CONFIG.RAINBOW_BORDER_COLORS[colorIndex];
+        
+        // Apply the random color
+        this.element.style.backgroundColor = this.baseColor;
+        this.element.style.borderColor = this.borderColor;
+        this.element.style.boxShadow = `
+            inset 0 0 0 1px ${this.borderColor.replace('0.5', '0.3')},
+            0 0 10px ${this.baseColor.replace('0.3', '0.1')}
+        `;
     }
     
     getSizeValue(sizeClass) {
@@ -202,9 +242,20 @@ class FloatingCube {
     }
     
     showCollisionEffect() {
-        this.element.classList.add('collision');
+        // Store original colors
+        const originalBackground = this.element.style.backgroundColor;
+        const originalBorder = this.element.style.borderColor;
+        
+        // Flash to white
+        this.element.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+        this.element.style.borderColor = 'rgba(255, 255, 255, 1)';
+        this.element.style.transform = 'scale(1.2)';
+        
         setTimeout(() => {
-            this.element.classList.remove('collision');
+            // Return to original colors
+            this.element.style.backgroundColor = originalBackground;
+            this.element.style.borderColor = originalBorder;
+            this.element.style.transform = 'scale(1)';
         }, CUBE_CONFIG.COLLISION_FLASH_DURATION);
     }
     
