@@ -23,11 +23,19 @@ The Mall uses a composite priamry key to handle duplicate stall numbers relative
 - Stall Name (StallName)
 - Items Sold (ItemsSold)
 
+## The Mall Street Names
+- Wall Street
+- Artist Alley
+- Woke Ave
+- Five
+- Poland Street
+
 ## The Mall Review entry format
 Table Name: the_mall_reviews
 - ReviewID (INT)
 - StallNumber (INT)
 - StreetName (String)
+- ReviewerID (BIGINT)
 - ReviewerName (String)
 - ReviewText (String) (Review Text)
 - Rating (INT)
