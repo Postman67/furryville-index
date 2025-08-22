@@ -151,21 +151,28 @@ function updateShopTable() {
     // Add database rows for current page
     pageData.forEach(shop => {
         const row = document.createElement('tr');
-        row.classList.add('clickable-row');
         
-        // Add click handler for stall page navigation
-        row.addEventListener('click', () => {
-            const stallNumber = shop.StallNumber;
+        // Check if we should make Warp Hall rows clickable
+        const isWarpHall = window.location.pathname.includes('warp-hall');
+        const enableWarpHallStallPages = window.ENABLE_WARP_HALL_STALL_PAGES || false;
+        
+        if (!isWarpHall || enableWarpHallStallPages) {
+            row.classList.add('clickable-row');
             
-            if (window.location.pathname.includes('warp-hall')) {
-                window.location.href = `/stall/warp-hall/${stallNumber}`;
-            } else if (window.location.pathname.includes('the-mall')) {
-                const streetName = shop.StreetName;
-                // URL encode the street name to handle spaces and special characters
-                const encodedStreetName = encodeURIComponent(streetName);
-                window.location.href = `/stall/the-mall/${encodedStreetName}/${stallNumber}`;
-            }
-        });
+            // Add click handler for stall page navigation
+            row.addEventListener('click', () => {
+                const stallNumber = shop.StallNumber;
+                
+                if (window.location.pathname.includes('warp-hall')) {
+                    window.location.href = `/stall/warp-hall/${stallNumber}`;
+                } else if (window.location.pathname.includes('the-mall')) {
+                    const streetName = shop.StreetName;
+                    // URL encode the street name to handle spaces and special characters
+                    const encodedStreetName = encodeURIComponent(streetName);
+                    window.location.href = `/stall/the-mall/${encodedStreetName}/${stallNumber}`;
+                }
+            });
+        }
         
         // Handle different table structures
         if (window.location.pathname.includes('warp-hall')) {

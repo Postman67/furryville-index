@@ -8,6 +8,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Feature flags
+ENABLE_WARP_HALL_STALL_PAGES = False  # Set to True to enable Warp Hall stall pages and clickable entries
+
 def get_db_connection():
     """Get database connection"""
     try:
@@ -30,7 +33,10 @@ def home():
 @app.route('/warp-hall')
 def warp_hall():
     """The Warp Hall - Magical shops page"""
-    return render_template('warp_hall.html', title='The Warp Hall - Furryville',message='Search for warp stalls')
+    return render_template('warp_hall.html', 
+                         title='The Warp Hall - Furryville',
+                         message='Search for warp stalls',
+                         enable_stall_pages=ENABLE_WARP_HALL_STALL_PAGES)
 
 @app.route('/the-mall')
 def the_mall():
@@ -45,6 +51,10 @@ def about():
 @app.route('/stall/warp-hall/<int:stall_number>')
 def warp_hall_stall(stall_number):
     """Dynamic stall page for Warp Hall"""
+    # Check if Warp Hall stall pages are enabled
+    if not ENABLE_WARP_HALL_STALL_PAGES:
+        return render_template('404.html'), 404
+    
     # Get stall data from database
     conn = get_db_connection()
     if not conn:

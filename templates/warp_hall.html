@@ -66,6 +66,10 @@
 
     {% include 'footer.html' %}
 
+    <script>
+        // Feature flag for Warp Hall stall pages
+        window.ENABLE_WARP_HALL_STALL_PAGES = {{ enable_stall_pages | tojson }};
+    </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

@@ -131,7 +131,7 @@
             {% elif location == 'the-mall' %}
                 window.location.href = "{{ url_for('the_mall') }}";
             {% endif %}
-        }
+        } // Expected Jinja2 template syntax errors
 
         // Simple notification system
         function showNotification(message, type) {
@@ -173,8 +173,9 @@
             {% else %}
                 // Warp Hall doesn't have reviews yet
                 const identifier = '{{ stall.StallNumber }}';
-            {% endif %}
-            
+            {% endif %} 
+            // Expected Jinja2 template syntax errors
+
             const apiUrl = `/api/reviews/${location}/${identifier}`;
             
             fetch(apiUrl)
