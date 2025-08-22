@@ -101,10 +101,17 @@
             </div>
         </section>
 
-        <section class="related-stalls">
-            <h2>Other stalls nearby</h2>
-            <div class="nearby-stalls" id="nearbyStalls">
-                <p>Loading nearby stalls...</p>
+        <section class="stall-reviews">
+            <h2>Customer Reviews</h2>
+            <div class="reviews-summary" id="reviewsSummary">
+                <div class="average-rating">
+                    <span class="rating-value">-</span>
+                    <div class="stars" id="averageStars"></div>
+                    <span class="review-count">No reviews yet</span>
+                </div>
+            </div>
+            <div class="reviews-list" id="reviewsList">
+                <p class="loading-reviews">Loading reviews...</p>
             </div>
         </section>
     </main>
@@ -156,15 +163,119 @@
             }, 3000);
         }
 
-        // Load nearby stalls (placeholder for future feature)
+        // Load reviews for this stall
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                document.getElementById('nearbyStalls').innerHTML = `
-                    <p>🚧 Nearby stalls feature coming soon!</p>
-                    <p>This will show other stalls in the same area.</p>
-                `;
-            }, 1000);
+            loadStallReviews();
         });
+
+        function loadStallReviews() {
+            const location = '{{ location }}';
+            {% if location == 'the-mall' %}
+                const streetName = '{{ stall.StreetName }}';
+                const stallNumber = '{{ stall.StallNumber }}';
+                const identifier = `${encodeURIComponent(streetName)}/${stallNumber}`;
+            {% else %}
+                // Warp Hall doesn't have reviews yet
+                const identifier = '{{ stall.StallNumber }}';
+            {% endif %}
+            
+            const apiUrl = `/api/reviews/${location}/${identifier}`;
+            
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    displayReviews(data);
+                })
+                .catch(error => {
+                    console.error('Error loading reviews:', error);
+                    displayReviewsError();
+                });
+        }
+
+        function displayReviews(data) {
+            const reviewsList = document.getElementById('reviewsList');
+            const reviewsSummary = document.getElementById('reviewsSummary');
+            const averageStars = document.getElementById('averageStars');
+            
+            if (data.reviews && data.reviews.length > 0) {
+                // Update summary
+                const avgRating = data.average_rating.toFixed(1);
+                const reviewCount = data.count;
+                
+                reviewsSummary.innerHTML = `
+                    <div class="average-rating">
+                        <span class="rating-value">${avgRating}</span>
+                        <div class="stars">${generateStars(data.average_rating)}</div>
+                        <span class="review-count">${reviewCount} review${reviewCount !== 1 ? 's' : ''}</span>
+                    </div>
+                `;
+                
+                // Display reviews
+                const reviewsHtml = data.reviews.map(review => `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="reviewer-name">${escapeHtml(review.ReviewerName)}</span>
+                            <div class="review-rating">${generateStars(review.Rating)}</div>
+                            <span class="review-date">${formatDate(review.CreatedAt)}</span>
+                        </div>
+                        <div class="review-text">
+                            ${escapeHtml(review.ReviewText)}
+                        </div>
+                    </div>
+                `).join('');
+                
+                reviewsList.innerHTML = reviewsHtml;
+            } else {
+                reviewsSummary.innerHTML = `
+                    <div class="average-rating">
+                        <span class="rating-value">-</span>
+                        <div class="stars">${generateStars(0)}</div>
+                        <span class="review-count">No reviews yet</span>
+                    </div>
+                `;
+                reviewsList.innerHTML = '<p class="no-reviews">This stall hasn\'t received any reviews yet. Be the first to leave one!</p>';
+            }
+        }
+
+        function displayReviewsError() {
+            const reviewsList = document.getElementById('reviewsList');
+            reviewsList.innerHTML = '<p class="error-reviews">Unable to load reviews at this time. Please try again later.</p>';
+        }
+
+        function generateStars(rating) {
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    starsHtml += '<span class="star filled">★</span>';
+                } else if (i - 0.5 <= rating) {
+                    starsHtml += '<span class="star half">★</span>';
+                } else {
+                    starsHtml += '<span class="star empty">☆</span>';
+                }
+            }
+            return starsHtml;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Unknown date';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
     </script>
 </body>
 </html>

@@ -202,6 +202,75 @@ def api_the_mall():
             "shops": []
         }), 500
 
+@app.route('/api/reviews/<location>/<path:identifier>')
+def api_reviews(location, identifier):
+    """API endpoint to get reviews for a specific stall"""
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({
+            "error": "Database connection failed",
+            "reviews": []
+        }), 500
+    
+    try:
+        cursor = conn.cursor()
+        
+        if location == 'the-mall':
+            # For The Mall, identifier should be "street_name/stall_number"
+            try:
+                street_name, stall_number = identifier.rsplit('/', 1)
+                stall_number = int(stall_number)
+            except (ValueError, TypeError):
+                return jsonify({
+                    "error": "Invalid stall identifier format",
+                    "reviews": []
+                }), 400
+            
+            cursor.execute("""
+                SELECT ReviewID, StallNumber, StreetName, ReviewerName, ReviewText, Rating, CreatedAt, UpdatedAt 
+                FROM the_mall_reviews 
+                WHERE StallNumber = %s AND StreetName = %s 
+                ORDER BY CreatedAt DESC
+            """, (stall_number, street_name))
+            
+        else:
+            # For now, only The Mall has reviews
+            return jsonify({
+                "message": "Reviews not available for this location",
+                "reviews": []
+            })
+        
+        reviews = []
+        for (review_id, stall_num, street, reviewer, review_text, rating, created_at, updated_at) in cursor:
+            reviews.append({
+                "ReviewID": review_id,
+                "StallNumber": stall_num,
+                "StreetName": street,
+                "ReviewerName": reviewer,
+                "ReviewText": review_text,
+                "Rating": rating,
+                "CreatedAt": created_at.isoformat() if created_at else None,
+                "UpdatedAt": updated_at.isoformat() if updated_at else None
+            })
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "reviews": reviews,
+            "count": len(reviews),
+            "average_rating": sum(r["Rating"] for r in reviews) / len(reviews) if reviews else 0
+        })
+        
+    except mariadb.Error as e:
+        print(f"Error querying reviews: {e}")
+        if conn:
+            conn.close()
+        return jsonify({
+            "error": "Database query failed",
+            "reviews": []
+        }), 500
+
 @app.route('/api/status')
 def api_status():
     """API status endpoint - test database connection"""
