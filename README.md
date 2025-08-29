@@ -8,7 +8,7 @@ Site DB user is **READ ONLY**
 - Password stored in local .env
 
 ## Warp Hall DB entry format
-Table Name: warp_hall
+Table Name: `warp_hall`
 
 - `StallNumber` (INT-11) - `warp_hall_pk` 
 - `IGN` (VARCHAR-100) - Owner/Manager IGN 
