@@ -32,7 +32,7 @@ def home():
 
 @app.route('/warp-hall')
 def warp_hall():
-    """The Warp Hall - Magical shops page"""
+    """The Warp Hall"""
     return render_template('warp_hall.html', 
                          title='The Warp Hall - Furryville',
                          message='Search for warp stalls',
@@ -40,7 +40,7 @@ def warp_hall():
 
 @app.route('/the-mall')
 def the_mall():
-    """The Mall - Modern shopping page"""
+    """The Mall"""
     return render_template('the_mall.html', title='The Mall - Furryville',message='Search for shop stalls in The Mall')
 
 @app.route('/about')
