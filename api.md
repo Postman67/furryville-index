@@ -237,16 +237,6 @@ The following routes serve HTML pages rather than JSON data:
 ### GET `/stall/the-mall/<street_name>/<stall_number>`
 **Description:** Individual stall page for The Mall stalls.
 
-### `the_mall_reviews`
-- `ReviewID` (INT) - Primary key
-- `StallNumber` (INT) - Foreign key to the_mall
-- `StreetName` (VARCHAR) - Street name
-- `ReviewerName` (VARCHAR) - Name of reviewer
-- `ReviewText` (TEXT) - Review content
-- `Rating` (INT) - Numeric rating
-- `CreatedAt` (DATETIME) - Creation timestamp
-- `UpdatedAt` (DATETIME) - Last update timestamp
-
 ## Environment Variables
 
 The application requires the following environment variable:
