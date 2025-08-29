@@ -111,6 +111,7 @@ def the_mall_stall(street_name, stall_number):
                 "IGN": result[2],
                 "StallName": result[3],
                 "ItemsSold": result[4],
+                "Location": "The Mall"
             }
         else:
             cursor.close()
