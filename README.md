@@ -23,13 +23,6 @@ The Mall uses a composite priamry key to handle duplicate stall numbers relative
 - `StallName` (VCHAR-100) - Friendly name of the stall/shop
 - `ItemsSold` (MEDIUMTEXT) - Types of items sold
 
-## The Mall Street Names
-- Wall Street
-- Artist Alley
-- Woke Ave
-- Five
-- Poland Street
-
 ## The Mall Review entry format
 Table Name: `the_mall_reviews`
 - `ReviewID` (BIGINT-20) - Primary key
@@ -41,3 +34,10 @@ Table Name: `the_mall_reviews`
 - `Rating` (TINYINT-3) - Numeric rating
 - `CreatedAt` (DATETIME) - Creation timestamp
 - `UpdatedAt` (DATETIME) - Last update timestamp
+
+## The Mall Street Names
+- Wall Street
+- Artist Alley
+- Woke Ave
+- Five
+- Poland Street
