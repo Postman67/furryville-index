@@ -296,6 +296,84 @@ body:has(.mall-map) .main-content,
   margin-top: 2px;
 }
 
+/* Stall type-specific styles */
+.stall.alleyway {
+  background: #7f8c8d !important;
+  border-color: #95a5a6;
+}
+
+.stall.alleyway:hover {
+  background: #95a5a6 !important;
+}
+
+.stall.stairway {
+  background: #8e44ad !important;
+  border-color: #9b59b6;
+}
+
+.stall.stairway:hover {
+  background: #9b59b6 !important;
+}
+
+/* ========================================
+   MAP LEGEND
+   ======================================== */
+
+.map-legend {
+  background: rgba(52, 73, 94, 0.9);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #34495e;
+  margin-top: 15px;
+}
+
+.map-legend h3 {
+  margin: 0 0 10px 0;
+  color: #ecf0f1;
+  text-align: center;
+  font-size: 14px;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ecf0f1;
+  font-size: 12px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--stall-border-color);
+  flex-shrink: 0;
+}
+
+.legend-color.occupied {
+  background: var(--occupied-stall-color);
+}
+
+.legend-color.vacant {
+  background: var(--vacant-stall-color);
+}
+
+.legend-color.alleyway {
+  background: #7f8c8d;
+  border-color: #95a5a6;
+}
+
+.legend-color.stairway {
+  background: #8e44ad;
+  border-color: #9b59b6;
+}
+
 /* ========================================
    LOADING INDICATOR
    ======================================== */
@@ -471,6 +549,22 @@ body:has(.mall-map) .main-content,
     width: 100%;
   }
   
+  /* Make legend more compact on mobile */
+  .map-legend {
+    padding: 15px;
+  }
+  
+  .legend-item {
+    padding: 8px 12px;
+    margin: 8px;
+    font-size: 13px;
+  }
+  
+  .legend-item::before {
+    width: 10px;
+    height: 10px;
+  }
+  
   .floor-buttons {
     flex-direction: row;
     flex-wrap: wrap;
@@ -504,5 +598,22 @@ body:has(.mall-map) .main-content,
   
   .modal-actions {
     flex-direction: column;
+  }
+  
+  /* Extra compact legend for very small screens */
+  .map-legend {
+    padding: 10px;
+    margin: 10px 0;
+  }
+  
+  .legend-item {
+    padding: 6px 10px;
+    margin: 6px;
+    font-size: 12px;
+  }
+  
+  .legend-item::before {
+    width: 8px;
+    height: 8px;
   }
 }
