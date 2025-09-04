@@ -70,15 +70,28 @@ body:has(.mall-map) .main-content,
 }
 
 /* ========================================
+   MAP AND CONTROLS LAYOUT
+   ======================================== */
+
+.map-and-controls-container {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+/* ========================================
    MAP CONTROLS
    ======================================== */
 
 .map-controls {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 30px;
-  margin-bottom: 30px;
-  align-items: start;
+  flex-shrink: 0;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .floor-selector {
@@ -148,11 +161,12 @@ body:has(.mall-map) .main-content,
    ======================================== */
 
 .map-info {
-  background: rgba(52, 73, 94, 0.8);
-  padding: 20px;
-  border-radius: 10px;
-  border: 2px solid #34495e;
+  background: rgba(52, 73, 94, 0.9);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #34495e;
   text-align: center;
+  margin-top: 15px;
 }
 
 .current-floor-info h3 {
@@ -176,13 +190,10 @@ body:has(.mall-map) .main-content,
   border-radius: 15px;
   padding: var(--map-padding);
   border: 1px solid #34495e;
-  margin-bottom: 30px;
   overflow-x: auto;
   overflow-y: hidden;
-  width: 95vw;  /* Use 95% of viewport width */
-  max-width: none;
-  margin-left: auto;
-  margin-right: auto;
+  flex: 1;
+  min-width: 0;
 }
 
 .map-wrapper {
@@ -436,19 +447,6 @@ body:has(.mall-map) .main-content,
    RESPONSIVE DESIGN
    ======================================== */
 
-@media (max-width: 1200px) {
-  .map-controls {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .floor-buttons {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-}
-
 @media (max-width: 768px) {
   :root {
     --block-size: 6px;
@@ -461,6 +459,22 @@ body:has(.mall-map) .main-content,
   
   .hero-section h1 {
     font-size: 2em;
+  }
+  
+  /* Stack layout vertically on smaller screens */
+  .map-and-controls-container {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .map-controls {
+    width: 100%;
+  }
+  
+  .floor-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   
   .floor-btn {
