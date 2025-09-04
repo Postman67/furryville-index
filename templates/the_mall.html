@@ -21,6 +21,19 @@
             </div>
         </div>
 
+        <section class="mall-navigation">
+            <div class="nav-buttons">
+                <a href="{{ url_for('the_mall_map') }}" class="nav-btn map-btn">
+                    🗺️ Interactive Map
+                    <span class="nav-desc">Browse all 5 floors visually</span>
+                </a>
+                <button class="nav-btn list-btn active">
+                    📋 Stall List
+                    <span class="nav-desc">Search and filter stalls</span>
+                </button>
+            </div>
+        </section>
+
         <section class="shop-section">
             <div class="search-container">
                 <input type="text" id="shopSearch" placeholder="Search shops, categories, or locations..." class="search-input">
