@@ -30,33 +30,6 @@ function getStreetByName(streetName) {
     return MAP_CONFIG.STREETS.find(street => street.name === streetName) || null;
 }
 
-/**
- * Get street index by name (legacy compatibility function)
- * @param {string} streetName - Name of the street
- * @returns {number} Street index or -1 if not found
- */
-function getStreetIndex(streetName) {
-    const street = getStreetByName(streetName);
-    return street ? street.index : -1;
-}
-
-/**
- * Get stall count for a specific street section
- * @param {string} streetName - Name of the street
- * @param {boolean} isNorth - True for north side, false for south side
- * @param {boolean} isWest - True for west of Main Street, false for east
- * @returns {number} Number of stalls in that section
- */
-function getStallCountForSection(streetName, isNorth, isWest) {
-    // Normalize street name for config lookup (remove spaces)
-    const normalizedStreetName = streetName.replace(/\s+/g, '');
-    const sideStr = isNorth ? 'North' : 'South';
-    const sectionStr = isWest ? 'West' : 'East';
-    const configKey = `${normalizedStreetName}${sideStr}${sectionStr}_StallCount`;
-    
-    return MAP_CONFIG[configKey] || 0;
-}
-
 /* ========================================
    CORE CONFIGURATION
    ======================================== */
@@ -87,37 +60,20 @@ const MAP_CONFIG = {
     ],
     
     // === STALL DEFAULTS ===
-    MAX_STALLS_PER_SIDE: 13,          // Fallback maximum stalls per side
     DEFAULT_STALL_WIDTH: 4,           // Default stall width (blocks)
-    DEFAULT_STALL_DEPTH: 4,           // Default stall depth (blocks)
+    DEFAULT_STALL_DEPTH: 8,           // Default stall depth (blocks)
     
-    // === SECTION-SPECIFIC STALL COUNTS ===
-    // Format: [StreetName][North/South][West/East]_StallCount
-    // These control how many stalls can be placed in each section
+    // === SIDE BLOCK LIMITS ===
+    // New block-based positioning system
+    WEST_SIDE_BLOCK_LIMIT: 54,        // Total blocks available on west side
+    EAST_SIDE_BLOCK_LIMIT: 53,        // Total blocks available on east side (no overflow protection)
     
-    // Wall Street
-    WallStreetNorthWest_StallCount: 6,
-    WallStreetNorthEast_StallCount: 6,
-    WallStreetSouthWest_StallCount: 6,
-    WallStreetSouthEast_StallCount: 6,
-    
-    // Artist Alley
-    ArtistAlleyNorthWest_StallCount: 8,
-    ArtistAlleyNorthEast_StallCount: 6,
-    ArtistAlleySouthWest_StallCount: 8,
-    ArtistAlleySouthEast_StallCount: 6,
-    
-    // Woke Ave
-    WokeAveNorthWest_StallCount: 7,
-    WokeAveNorthEast_StallCount: 6,
-    WokeAveSouthWest_StallCount: 6,
-    WokeAveSouthEast_StallCount: 6,
-    
-    // Poland Street
-    PolandStreetNorthWest_StallCount: 7,
-    PolandStreetNorthEast_StallCount: 6,
-    PolandStreetSouthWest_StallCount: 6,
-    PolandStreetSouthEast_StallCount: 6,
+    // === STALL TYPES ===
+    STALL_TYPES: {
+        NORMAL: 'normal',             // Regular stalls
+        ALLEYWAY: 'alleyway',         // Alleyways (no stall number displayed)
+        STAIRWAY: 'stairway'          // Stairways (no stall number displayed)
+    },
     
     // === FLOOR CONFIGURATION ===
     FLOORS: [1, 2, 3, 4, 5],
@@ -298,32 +254,78 @@ function showError(message) {
 
 /**
  * Parse stall number into floor and position components
- * @param {number|string} stallNumber - 3-digit stall number (e.g., 101, 205)
- * @returns {Object} Object with floor and position properties
+ * Now supports decimal stall numbers (e.g., 107.5)
+ * @param {number|string} stallNumber - Stall number (e.g., 101, 107.5)
+ * @returns {Object} Object with floor, position, and isDecimal properties
  */
 function parseStallNumber(stallNumber) {
-    const stallStr = stallNumber.toString().padStart(3, '0');
-    const floor = parseInt(stallStr[0]);
-    const position = parseInt(stallStr.slice(1));
+    const stallStr = stallNumber.toString();
+    const isDecimal = stallStr.includes('.');
     
-    return { floor, position };
+    if (isDecimal) {
+        const [wholePart, decimalPart] = stallStr.split('.');
+        const wholePadded = wholePart.padStart(3, '0');
+        const floor = parseInt(wholePadded[0]);
+        const basePosition = parseInt(wholePadded.slice(1));
+        
+        return { 
+            floor, 
+            position: basePosition, 
+            isDecimal: true,
+            decimalPart: parseFloat('0.' + decimalPart),
+            originalNumber: stallNumber
+        };
+    } else {
+        const stallPadded = stallStr.padStart(3, '0');
+        const floor = parseInt(stallPadded[0]);
+        const position = parseInt(stallPadded.slice(1));
+        
+        return { 
+            floor, 
+            position, 
+            isDecimal: false,
+            originalNumber: stallNumber
+        };
+    }
 }
 
 /**
- * Calculate exact position for a stall on the map
+ * Determine stall type based on ItemsSold field
+ * @param {Object} stall - Stall data from database
+ * @returns {string} Stall type constant
+ */
+function getStallType(stall) {
+    if (!stall.ItemsSold) return MAP_CONFIG.STALL_TYPES.NORMAL;
+    
+    const itemsSold = stall.ItemsSold.toLowerCase().trim();
+    
+    if (itemsSold === 'alleyway') {
+        return MAP_CONFIG.STALL_TYPES.ALLEYWAY;
+    } else if (itemsSold === 'stairway') {
+        return MAP_CONFIG.STALL_TYPES.STAIRWAY;
+    } else {
+        return MAP_CONFIG.STALL_TYPES.NORMAL;
+    }
+}
+
+/**
+ * Calculate exact position for a stall on the map using new block-based system
  * 
- * POSITIONING LOGIC:
+ * NEW POSITIONING LOGIC:
  * - Odd stall positions = South side of street
  * - Even stall positions = North side of street  
- * - Stalls fill West sections first, then East sections
- * - Position is based on cumulative width of previous stalls
+ * - Stalls fill West side first until block limit (54 blocks)
+ * - If stall doesn't fit on West side, move to East side
+ * - East side has no overflow protection (53 blocks available)
+ * - Decimal stalls (e.g., 107.5) go next to their base stall (107)
  * 
  * @param {Object} stall - Stall data from database
  * @param {Array} allStalls - All stalls for width calculation
  * @returns {Object|null} Position object or null if no space
  */
 function calculateStallPosition(stall, allStalls) {
-    const { floor, position } = parseStallNumber(stall.StallNumber);
+    const parsedStall = parseStallNumber(stall.StallNumber);
+    const { floor, position, isDecimal } = parsedStall;
     const street = getStreetByName(stall.StreetName);
     
     // Skip if street is not displayed
@@ -338,130 +340,78 @@ function calculateStallPosition(stall, allStalls) {
     // Determine side using stall number (odd = south, even = north)
     const isNorthSide = position % 2 === 0;
     
-    // Get section capacities for this street
-    const sectionCounts = getSectionCounts(stall.StreetName);
+    // Get all stalls on the same street, floor, and side for positioning calculation
+    const sameStreetFloorSide = allStalls.filter(s => {
+        const parsedS = parseStallNumber(s.StallNumber);
+        const sIsNorthSide = parsedS.position % 2 === 0;
+        return parsedS.floor === floor && 
+               s.StreetName === stall.StreetName && 
+               sIsNorthSide === isNorthSide;
+    });
     
-    // Calculate section assignment and position
-    const sectionInfo = calculateSectionAssignment(stall, allStalls, isNorthSide, sectionCounts);
-    if (!sectionInfo) {
-        return null; // No space available
+    // Sort stalls by position number for proper ordering
+    sameStreetFloorSide.sort((a, b) => {
+        const aPos = parseStallNumber(a.StallNumber);
+        const bPos = parseStallNumber(b.StallNumber);
+        if (aPos.position === bPos.position) {
+            // Handle decimal stalls - non-decimal comes first
+            return aPos.isDecimal ? 1 : -1;
+        }
+        return aPos.position - bPos.position;
+    });
+    
+    // Calculate cumulative width and determine side placement
+    let westSideUsedBlocks = 0;
+    let eastSideUsedBlocks = 0;
+    let stallPlacement = null;
+    
+    for (const currentStall of sameStreetFloorSide) {
+        const currentParsed = parseStallNumber(currentStall.StallNumber);
+        const currentWidth = currentStall.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH;
+        
+        // Check if this is our target stall
+        const isTargetStall = currentStall.StallNumber === stall.StallNumber;
+        
+        // Try to place on west side first (enforce west side limit)
+        if (westSideUsedBlocks + currentWidth <= MAP_CONFIG.WEST_SIDE_BLOCK_LIMIT) {
+            if (isTargetStall) {
+                stallPlacement = {
+                    isWestOfMainStreet: true,
+                    xBlock: westSideUsedBlocks,
+                    usedBlocks: westSideUsedBlocks
+                };
+                break;
+            }
+            westSideUsedBlocks += currentWidth;
+        } else {
+            // Place on east side (no limit - can overflow indefinitely)
+            if (isTargetStall) {
+                stallPlacement = {
+                    isWestOfMainStreet: false,
+                    xBlock: eastSideUsedBlocks,
+                    usedBlocks: eastSideUsedBlocks
+                };
+                break;
+            }
+            eastSideUsedBlocks += currentWidth;
+        }
     }
     
-    // Calculate cumulative width from previous stalls in same section
-    const cumulativeWidth = calculateCumulativeWidth(stall, allStalls, sectionInfo);
+    if (!stallPlacement) {
+        console.warn(`Could not determine placement for stall ${stall.StallNumber}`);
+        return null;
+    }
     
-    // Calculate final pixel coordinates
+    // Calculate final position
     return calculateFinalPosition(
         stall, 
         street, 
         stallWidthBlocks, 
         stallDepthBlocks, 
         isNorthSide, 
-        sectionInfo.isWestOfMainStreet, 
-        cumulativeWidth
+        stallPlacement.isWestOfMainStreet, 
+        stallPlacement.xBlock
     );
-}
-
-/**
- * Get stall count configuration for all sections of a street
- * @param {string} streetName - Name of the street
- * @returns {Object} Object with counts for each section
- */
-function getSectionCounts(streetName) {
-    return {
-        northWest: getStallCountForSection(streetName, true, true),
-        northEast: getStallCountForSection(streetName, true, false),
-        southWest: getStallCountForSection(streetName, false, true),
-        southEast: getStallCountForSection(streetName, false, false)
-    };
-}
-
-/**
- * Calculate which section a stall should be placed in
- * @param {Object} stall - Stall data
- * @param {Array} allStalls - All stalls for counting
- * @param {boolean} isNorthSide - True if stall is on north side
- * @param {Object} sectionCounts - Available space in each section
- * @returns {Object|null} Section assignment info or null if no space
- */
-function calculateSectionAssignment(stall, allStalls, isNorthSide, sectionCounts) {
-    const { floor, position } = parseStallNumber(stall.StallNumber);
-    
-    // Count stalls on same side with lower position numbers
-    const stallsOnSameSide = allStalls.filter(s => {
-        const { floor: sFloor, position: sPosition } = parseStallNumber(s.StallNumber);
-        return sFloor === floor && 
-               s.StreetName === stall.StreetName && 
-               (sPosition % 2 === 0) === isNorthSide && // Same side
-               sPosition < position; // Lower position numbers
-    }).length;
-    
-    // Determine section assignment based on available space
-    let isWestOfMainStreet, positionInSection, maxStalls;
-    
-    if (isNorthSide) {
-        if (stallsOnSameSide < sectionCounts.northWest) {
-            isWestOfMainStreet = true;
-            positionInSection = stallsOnSameSide + 1;
-            maxStalls = sectionCounts.northWest + sectionCounts.northEast;
-        } else {
-            isWestOfMainStreet = false;
-            positionInSection = stallsOnSameSide - sectionCounts.northWest + 1;
-            maxStalls = sectionCounts.northWest + sectionCounts.northEast;
-        }
-    } else {
-        if (stallsOnSameSide < sectionCounts.southWest) {
-            isWestOfMainStreet = true;
-            positionInSection = stallsOnSameSide + 1;
-            maxStalls = sectionCounts.southWest + sectionCounts.southEast;
-        } else {
-            isWestOfMainStreet = false;
-            positionInSection = stallsOnSameSide - sectionCounts.southWest + 1;
-            maxStalls = sectionCounts.southWest + sectionCounts.southEast;
-        }
-    }
-    
-    // Check if stall exceeds available space
-    if (stallsOnSameSide >= maxStalls) {
-        console.warn(`Stall ${stall.StallNumber} exceeds available space on ${stall.StreetName}`);
-        return null;
-    }
-    
-    return { isWestOfMainStreet, positionInSection };
-}
-
-/**
- * Calculate cumulative width from previous stalls in the same section
- * @param {Object} stall - Current stall
- * @param {Array} allStalls - All stalls
- * @param {Object} sectionInfo - Section assignment info
- * @returns {number} Cumulative width in blocks
- */
-function calculateCumulativeWidth(stall, allStalls, sectionInfo) {
-    const { floor, position } = parseStallNumber(stall.StallNumber);
-    const isNorthSide = position % 2 === 0;
-    const { isWestOfMainStreet } = sectionInfo;
-    
-    // Find all stalls in the same section that come before this one
-    const sameSection = allStalls.filter(s => {
-        const { floor: sFloor, position: sPosition } = parseStallNumber(s.StallNumber);
-        const sIsNorthSide = sPosition % 2 === 0;
-        
-        // Calculate which section the comparison stall is in
-        const sectionCounts = getSectionCounts(s.StreetName);
-        const sSectionInfo = calculateSectionAssignment(s, allStalls, sIsNorthSide, sectionCounts);
-        
-        return sFloor === floor && 
-               s.StreetName === stall.StreetName && 
-               sIsNorthSide === isNorthSide && 
-               sSectionInfo && sSectionInfo.isWestOfMainStreet === isWestOfMainStreet &&
-               sPosition < position;
-    });
-    
-    // Sum up the widths of all previous stalls in the section
-    return sameSection.reduce((total, prevStall) => {
-        return total + (prevStall.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH);
-    }, 0);
 }
 
 /**
@@ -472,18 +422,10 @@ function calculateCumulativeWidth(stall, allStalls, sectionInfo) {
  * @param {number} stallDepthBlocks - Stall depth in blocks
  * @param {boolean} isNorthSide - True if on north side
  * @param {boolean} isWestOfMainStreet - True if west of Main Street
- * @param {number} cumulativeWidth - Cumulative width in blocks
+ * @param {number} xBlock - X position in blocks
  * @returns {Object} Final position object with pixel coordinates
  */
-function calculateFinalPosition(stall, street, stallWidthBlocks, stallDepthBlocks, isNorthSide, isWestOfMainStreet, cumulativeWidth) {
-    // Calculate X position in blocks
-    let xBlock;
-    if (isWestOfMainStreet) {
-        xBlock = cumulativeWidth;
-    } else {
-        xBlock = MAP_CONFIG.MAIN_STREET_X_BLOCK + MAP_CONFIG.MAIN_STREET_WIDTH + cumulativeWidth;
-    }
-    
+function calculateFinalPosition(stall, street, stallWidthBlocks, stallDepthBlocks, isNorthSide, isWestOfMainStreet, xBlock) {
     // Calculate Y position based on street and side
     let yBlock, anchorSide;
     if (isNorthSide) {
@@ -496,8 +438,18 @@ function calculateFinalPosition(stall, street, stallWidthBlocks, stallDepthBlock
         anchorSide = 'top-left';
     }
     
+    // Calculate X position based on side of Main Street
+    let finalXBlock;
+    if (isWestOfMainStreet) {
+        // West side: position as is
+        finalXBlock = xBlock;
+    } else {
+        // East side: position relative to Main Street's eastern edge
+        finalXBlock = MAP_CONFIG.MAIN_STREET_X_BLOCK + MAP_CONFIG.MAIN_STREET_WIDTH + xBlock;
+    }
+    
     // Convert blocks to pixels for rendering
-    const xPixels = MAP_CONFIG.MAP_MARGIN + (xBlock * MAP_CONFIG.BLOCK_SIZE);
+    const xPixels = MAP_CONFIG.MAP_MARGIN + (finalXBlock * MAP_CONFIG.BLOCK_SIZE);
     const yPixels = MAP_CONFIG.MAP_MARGIN + (yBlock * MAP_CONFIG.BLOCK_SIZE);
     const widthPixels = stallWidthBlocks * MAP_CONFIG.BLOCK_SIZE;
     const heightPixels = stallDepthBlocks * MAP_CONFIG.BLOCK_SIZE;
@@ -507,7 +459,7 @@ function calculateFinalPosition(stall, street, stallWidthBlocks, stallDepthBlock
         y: yPixels,
         width: widthPixels,
         height: heightPixels,
-        xBlock: xBlock,
+        xBlock: finalXBlock,
         yBlock: yBlock,
         widthBlocks: stallWidthBlocks,
         heightBlocks: stallDepthBlocks,
@@ -687,20 +639,43 @@ function renderStall(stall, allStalls) {
     }
     
     const isOccupied = stall.IGN && stall.IGN.trim() !== '';
+    const stallType = getStallType(stall);
     
-    // Create stall element
+    // Create stall element with appropriate classes
     const stallElement = document.createElement('div');
-    stallElement.className = `stall ${isOccupied ? 'occupied' : 'vacant'}`;
+    let stallClasses = ['stall'];
+    
+    // Add occupancy class
+    if (isOccupied) {
+        stallClasses.push('occupied');
+    } else {
+        stallClasses.push('vacant');
+    }
+    
+    // Add type-specific classes
+    switch (stallType) {
+        case MAP_CONFIG.STALL_TYPES.ALLEYWAY:
+            stallClasses.push('alleyway');
+            break;
+        case MAP_CONFIG.STALL_TYPES.STAIRWAY:
+            stallClasses.push('stairway');
+            break;
+        default:
+            stallClasses.push('normal');
+    }
+    
+    stallElement.className = stallClasses.join(' ');
     stallElement.style.position = 'absolute';
     stallElement.style.left = position.x + 'px';
     stallElement.style.top = position.y + 'px';
     stallElement.style.width = position.width + 'px';
     stallElement.style.height = position.height + 'px';
     stallElement.dataset.stallNumber = stall.StallNumber;
+    stallElement.dataset.stallType = stallType;
     stallElement.dataset.stallData = JSON.stringify(stall);
     
-    // Add stall content
-    if (MAP_CONFIG.SHOW_STALL_NUMBERS) {
+    // Add stall content - only show numbers for normal stalls
+    if (MAP_CONFIG.SHOW_STALL_NUMBERS && stallType === MAP_CONFIG.STALL_TYPES.NORMAL) {
         stallElement.innerHTML = `<div class="stall-number">${stall.StallNumber}</div>`;
     }
     
