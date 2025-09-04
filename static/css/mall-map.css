@@ -39,10 +39,18 @@
    MAIN MAP LAYOUT
    ======================================== */
 
+/* Override main content width for full-width map */
+body:has(.mall-map) .main-content,
+.main-content:has(.mall-map) {
+  max-width: none;
+  width: 100%;
+  padding: 20px 40px;
+}
+
 .main-content {
   padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
 }
 
 .hero-section {
@@ -223,11 +231,16 @@
   margin-bottom: 30px;
   overflow-x: auto;
   overflow-y: hidden;
+  width: 95vw;  /* Use 95% of viewport width */
+  max-width: none;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .map-wrapper {
-  min-width: 800px;
+  min-width: 1000px;  /* Increased minimum width */
   position: relative;
+  width: 100%;
 }
 
 .mall-map {
@@ -237,6 +250,7 @@
   margin: 0 auto;
   min-height: 600px;
   overflow: hidden;
+  width: 100%;
 }
 
 /* ========================================

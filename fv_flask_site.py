@@ -191,8 +191,8 @@ def api_the_mall():
         # Try to get stall dimensions if they exist, otherwise use defaults
         cursor.execute("""
             SELECT StallNumber, StreetName, IGN, StallName, ItemsSold,
-                   COALESCE(stall_width, 6) as stall_width,
-                   COALESCE(stall_depth, 9) as stall_depth
+                   COALESCE(StallWidth, 3) as stall_width,
+                   COALESCE(StallDepth, 3) as stall_depth
             FROM the_mall 
             ORDER BY StallNumber
         """)
@@ -233,8 +233,8 @@ def api_the_mall():
                     "IGN": ign,
                     "StallName": stall_name,
                     "ItemsSold": items_sold,
-                    "stall_width": 6,  # Default fallback
-                    "stall_depth": 9   # Default fallback
+                    "stall_width": 3,  # Default fallback to match JavaScript config
+                    "stall_depth": 3   # Default fallback to match JavaScript config
                 })
             
             cursor.close()
