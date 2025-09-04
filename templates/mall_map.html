@@ -26,6 +26,17 @@
             <p class="hero-subtitle">{{ message or 'Navigate through all 5 floors of The Mall' }}</p>
         </div>
 
+        <nav class="mall-navigation">
+            <div class="nav-buttons">
+                <a href="{{ url_for('the_mall') }}" class="nav-btn">
+                    📋 Shop List
+                </a>
+                <button class="nav-btn map-btn active" onclick="location.reload()">
+                    🗺️ Interactive Map
+                </button>
+            </div>
+        </nav>
+
         <!-- Map Controls -->
         <section class="map-controls">
             <div class="floor-selector">

@@ -1,144 +1,180 @@
 # Interactive Mall Map System
 
 ## Overview
-The interactive mall map provides a top-down view of The Mall with 5 floors, allowing users to navigate between floors and click on stalls to view details.
+The interactive mall map displays a top-down view of The Mall's 5 floors, showing each stall positioned according to Minecraft coordinates. Users can switch between floors and click on stalls to view details.
 
-## Architecture
-
-### File Structure
-- `templates/mall_map.html` - Main map template
+## File Structure
+- `templates/mall_map.html` - Main map page template
 - `static/css/mall-map.css` - Map styling and layout
-- `static/js/mall-map.js` - Interactive functionality and floor switching
+- `static/js/mall-map.js` - Map logic and interactivity
+- `fv_flask_site.py` - Backend API endpoints
 
-### Floor/Stall Addressing System
-- **Format**: `XYZ Street Name`
-  - X = Floor number (1-5)
-  - YZ = Stall position (01-99)
-  - Example: "321 Wall Street" = Floor 3, Position 21, Wall Street
+## Stall Addressing System
+Stalls are addressed using a 3-digit system: `XYZ`
+- `X` = Floor number (1-5)
+- `YZ` = Stall position on that floor (01-99)
 
-### Streets Layout
-- **Cross Streets** (running horizontally): 9 blocks wide
+Examples:
+- `321` = Floor 3, Position 21 (Wall Street)
+- `105` = Floor 1, Position 05 (Wall Street)
+
+## Layout Logic
+
+### Street System
+- **Cross Streets**: 9 blocks wide, run horizontally across the map
   - Wall Street
-  - Artist Alley
+  - Artist Alley  
   - Woke Ave
   - Five
   - Poland Street
-- **Main Street** (running vertically): Connects all cross streets
+- **Main Street**: Runs vertically through the center, connecting all cross streets
+
+### Stall Positioning
+- Stalls alternate between top (right) and bottom (left) sides of each street
+- Even stall numbers (02, 04, 06...) = Left side (bottom of street)
+- Odd stall numbers (01, 03, 05...) = Right side (top of street)
+- Stalls have variable width and depth (measured in Minecraft blocks)
+- Default size: 6 blocks wide × 9 blocks deep (if not specified in database)
 
 ## Configuration Variables
 
-### Map Layout (`mall-map.js`)
+### CSS Variables (in mall-map.css)
+```css
+:root {
+  /* Map scaling and dimensions */
+  --block-size: 8px;              /* Size of 1 Minecraft block in pixels */
+  --street-width: 72px;           /* 9 blocks × 8px */
+  --main-street-width: 72px;      /* 9 blocks × 8px */
+  
+  /* Colors */
+  --occupied-stall-color: #4a90e2;     /* Blue for occupied stalls */
+  --vacant-stall-color: #95a5a6;       /* Gray for vacant stalls */
+  --street-color: #34495e;             /* Dark gray for streets */
+  --stall-border-color: #2c3e50;       /* Border around stalls */
+  --hover-color: #f39c12;              /* Orange for hover effects */
+  
+  /* Interactive elements */
+  --floor-btn-active: #e74c3c;         /* Red for active floor button */
+  --floor-btn-inactive: #7f8c8d;       /* Gray for inactive floor buttons */
+}
+```
+
+### JavaScript Configuration (in mall-map.js)
 ```javascript
 const MAP_CONFIG = {
-    // Grid dimensions
-    GRID_WIDTH: 9,           // Number of blocks across each street
-    FLOOR_COUNT: 5,          // Total number of floors
-    
-    // Visual settings
-    STALL_WIDTH: 60,         // Default stall width in pixels
-    STALL_HEIGHT: 40,        // Default stall height in pixels
-    STREET_WIDTH: 80,        // Width of streets between stall rows
-    
-    // Colors
-    OCCUPIED_COLOR: '#4a90e2',     // Color for occupied stalls
-    VACANT_COLOR: '#cccccc',       // Color for vacant stalls
-    SELECTED_COLOR: '#f39c12',     // Color for selected stall
-    STREET_COLOR: '#2c3e50',       // Color for street areas
-    
-    // Animation
-    TRANSITION_SPEED: 300,         // Floor transition speed in ms
-    HOVER_SCALE: 1.05,            // Scale factor on hover
-    
-    // Floor colors (for visual distinction)
-    FLOOR_COLORS: [
-        '#e8f4fd',  // Floor 1 - Light blue
-        '#fff2e8',  // Floor 2 - Light orange
-        '#f0fff0',  // Floor 3 - Light green
-        '#fff0f5',  // Floor 4 - Light pink
-        '#f5f0ff'   // Floor 5 - Light purple
-    ]
+  // Map dimensions and scaling
+  BLOCK_SIZE: 8,                    // Pixels per Minecraft block
+  STREET_WIDTH: 9,                  // Blocks wide for cross streets
+  MAIN_STREET_WIDTH: 9,             // Blocks wide for main street
+  
+  // Default stall dimensions (in blocks)
+  DEFAULT_STALL_WIDTH: 6,
+  DEFAULT_STALL_DEPTH: 9,
+  
+  // Animation and interaction
+  HOVER_SCALE: 1.05,               // Scale factor on hover
+  ANIMATION_DURATION: 200,         // MS for hover animations
+  
+  // Floor configuration
+  FLOORS: [1, 2, 3, 4, 5],
+  FLOOR_LABELS: {
+    1: "Ground Floor",
+    2: "Second Floor", 
+    3: "Third Floor",
+    4: "Fourth Floor",
+    5: "Fifth Floor"
+  },
+  
+  // Street layout
+  STREETS: [
+    { name: "Wall Street", y_position: 0 },
+    { name: "Artist Alley", y_position: 1 },
+    { name: "Woke Ave", y_position: 2 },
+    { name: "Five", y_position: 3 },
+    { name: "Poland Street", y_position: 4 }
+  ]
 };
 ```
 
-### Street Configuration
+## How It Works
+
+### 1. Map Generation
+1. JavaScript fetches stall data from `/api/the-mall`
+2. Data is filtered by selected floor
+3. Each stall is positioned based on:
+   - Street name → Y coordinate
+   - Stall position → X coordinate
+   - Even/odd position → Side of street (top/bottom)
+
+### 2. Coordinate Calculation
 ```javascript
-const STREETS = [
-    { name: 'Wall Street', id: 'wall-street' },
-    { name: 'Artist Alley', id: 'artist-alley' },
-    { name: 'Woke Ave', id: 'woke-ave' },
-    { name: 'Five', id: 'five' },
-    { name: 'Poland Street', id: 'poland-street' }
-];
+function calculateStallPosition(stallNumber, streetName) {
+  const floor = Math.floor(stallNumber / 100);
+  const position = stallNumber % 100;
+  const isRightSide = position % 2 === 1;
+  
+  const streetIndex = getStreetIndex(streetName);
+  const y = streetIndex * (STREET_WIDTH + DEFAULT_STALL_DEPTH * 2);
+  
+  let x = (Math.floor(position / 2) - 1) * DEFAULT_STALL_WIDTH;
+  
+  if (!isRightSide) {
+    y += STREET_WIDTH + DEFAULT_STALL_DEPTH;
+  }
+  
+  return { x, y };
+}
 ```
 
-### Stall Size Variations
-```javascript
-const STALL_SIZES = {
-    small: { width: 40, height: 30 },
-    medium: { width: 60, height: 40 },
-    large: { width: 80, height: 50 },
-    xlarge: { width: 100, height: 60 }
-};
-```
+### 3. Stall Rendering
+- Each stall is rendered as a colored rectangle
+- Size determined by `stall_width` and `stall_depth` from database
+- Color indicates occupancy status (occupied = blue, vacant = gray)
+- Hover effects and click handlers for interactivity
 
-## Core Functions
+### 4. Floor Switching
+- Floor selector buttons filter displayed stalls
+- Active floor highlighted with different styling
+- Stall count updated for each floor
 
-### `generateFloorMap(floorNumber)`
-- Creates the visual grid for a specific floor
-- Queries database for stall data
-- Renders stalls with appropriate sizes and colors
+## Database Integration
+The system expects the following database fields:
+- `StallNumber` - 3-digit address (required)
+- `StreetName` - Street name (required)
+- `IGN` - Owner username (required)
+- `StallName` - Shop name (required)
+- `ItemsSold` - Description of items (optional)
+- `stall_width` - Width in blocks (optional, defaults to 6)
+- `stall_depth` - Depth in blocks (optional, defaults to 9)
 
-### `switchFloor(floorNumber)`
-- Handles floor navigation
-- Updates floor selector UI
-- Triggers map regeneration with transition effects
+## Customization Guide
 
-### `handleStallClick(stallNumber, streetName)`
-- Processes stall selection
-- Shows stall details popup or navigates to stall page
-- Updates URL for direct linking
+### Changing Colors
+Edit the CSS variables in `mall-map.css` under `:root`
 
-### `loadStallData(floorNumber)`
-- Fetches stall data from the API endpoint
-- Caches data for performance
-- Returns formatted stall information
+### Adjusting Map Scale
+- Modify `--block-size` in CSS
+- Update `BLOCK_SIZE` in JavaScript config
 
-## API Integration
-- Uses existing `/api/the-mall` endpoint
-- Filters data by floor number
-- Supports real-time updates
+### Adding New Streets
+1. Add to `STREETS` array in JavaScript config
+2. Update positioning calculations if needed
 
-## Responsive Design
-- Mobile-friendly touch controls
-- Scalable map that fits different screen sizes
-- Collapsible floor selector on mobile
+### Modifying Stall Sizes
+- Change `DEFAULT_STALL_WIDTH` and `DEFAULT_STALL_DEPTH`
+- Add database fields `stall_width` and `stall_depth` for per-stall customization
 
-## Future Enhancements
-- Search functionality to highlight specific stalls
-- Filter by stall type or availability
-- 3D visualization toggle
-- Save favorite stalls
-- Walking directions between stalls
-
-## Easy Customization Points
-
-1. **Colors**: Modify `MAP_CONFIG.FLOOR_COLORS` and color constants
-2. **Grid Size**: Adjust `GRID_WIDTH` and `FLOOR_COUNT`
-3. **Stall Sizes**: Update `STALL_SIZES` object
-4. **Animation Speed**: Change `TRANSITION_SPEED`
-5. **Visual Effects**: Modify hover and selection styles in CSS
-6. **Street Layout**: Update `STREETS` array to add/remove streets
-
-## Database Requirements
-The map requires the existing `the_mall` table with:
-- `StallNumber` (format: XYZ where X=floor, YZ=position)
-- `StreetName`
-- `StallName`
-- `IGN` (owner)
-- `ItemsSold`
+### Floor Management
+- Modify `FLOORS` array to add/remove floors
+- Update `FLOOR_LABELS` object for custom floor names
 
 ## Performance Considerations
-- Virtual scrolling for large floors
-- Lazy loading of stall details
-- Efficient canvas rendering for complex layouts
-- Debounced resize handlers
+- Map is re-rendered on floor changes
+- Stall data is cached after initial API call
+- CSS transforms used for smooth hover animations
+- Event delegation for efficient click handling
+
+## Browser Compatibility
+- Modern browsers with CSS Grid and Flexbox support
+- JavaScript ES6+ features used
+- Responsive design for mobile devices
