@@ -1,462 +1,535 @@
-/* Mall Map Styles */
+/* Interactive Mall Map Styles */
+
+:root {
+  /* ========================================
+     EASY TO CHANGE CONFIGURATION VARIABLES
+     ======================================== */
+  
+  /* Map scaling and dimensions */
+  --block-size: 8px;                    /* Size of 1 Minecraft block in pixels */
+  --street-width: 72px;                 /* 9 blocks × 8px */
+  --main-street-width: 72px;            /* 9 blocks × 8px */
+  --map-padding: 40px;                  /* Padding around the entire map */
+  
+  /* Colors */
+  --occupied-stall-color: #4a90e2;      /* Blue for occupied stalls */
+  --vacant-stall-color: #95a5a6;        /* Gray for vacant stalls */
+  --street-color: #34495e;              /* Dark gray for streets */
+  --main-street-color: #2c3e50;         /* Darker gray for main street */
+  --stall-border-color: #2c3e50;        /* Border around stalls */
+  --hover-color: #f39c12;               /* Orange for hover effects */
+  --selected-color: #e74c3c;            /* Red for selected stalls */
+  
+  /* Interactive elements */
+  --floor-btn-active: #e74c3c;          /* Red for active floor button */
+  --floor-btn-inactive: #7f8c8d;        /* Gray for inactive floor buttons */
+  --floor-btn-hover: #c0392b;           /* Darker red for hover */
+  
+  /* Animation timings */
+  --hover-transition: 0.2s ease;
+  --floor-transition: 0.3s ease;
+  
+  /* Typography */
+  --legend-font-size: 14px;
+  --floor-label-font-size: 16px;
+  --stall-label-font-size: 12px;
+}
+
+/* ========================================
+   MAIN MAP LAYOUT
+   ======================================== */
+
+.main-content {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.hero-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.hero-section h1 {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  color: #ecf0f1;
+}
+
+.hero-subtitle {
+  font-size: 1.2em;
+  color: #bdc3c7;
+  margin-bottom: 0;
+}
+
+/* ========================================
+   MAP CONTROLS
+   ======================================== */
 
 .map-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin: 2rem 0;
-    padding: 1.5rem;
-    background: var(--card-bg);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+  align-items: start;
 }
 
-.floor-selector h3,
-.map-legend h3,
-.map-info h3 {
-    margin: 0 0 1rem 0;
-    color: var(--primary-color);
-    font-size: 1.1rem;
-    font-weight: 600;
+.floor-selector {
+  background: rgba(52, 73, 94, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #34495e;
 }
 
-/* Floor Selection */
+.floor-selector h3 {
+  margin: 0 0 15px 0;
+  color: #ecf0f1;
+  text-align: center;
+  font-size: var(--floor-label-font-size);
+}
+
 .floor-buttons {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .floor-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    min-width: 80px;
+  background: var(--floor-btn-inactive);
+  border: none;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--floor-transition);
+  color: white;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 160px;
 }
 
 .floor-btn:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background: var(--floor-btn-hover);
+  transform: translateY(-2px);
 }
 
 .floor-btn.active {
-    background: var(--accent-color);
-    color: white;
-    border-color: var(--accent-color);
+  background: var(--floor-btn-active);
+  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
 }
 
 .floor-number {
-    font-size: 1.5rem;
-    font-weight: bold;
-    line-height: 1;
+  font-weight: bold;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .floor-label {
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-    opacity: 0.9;
+  flex: 1;
+  text-align: left;
 }
 
-/* Legend */
+/* ========================================
+   MAP LEGEND
+   ======================================== */
+
+.map-legend {
+  background: rgba(52, 73, 94, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #34495e;
+  text-align: center;
+}
+
+.map-legend h3 {
+  margin: 0 0 15px 0;
+  color: #ecf0f1;
+  font-size: var(--legend-font-size);
+}
+
 .legend-items {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ecf0f1;
+  font-size: var(--legend-font-size);
 }
 
 .legend-color {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid var(--stall-border-color);
 }
 
 .legend-color.occupied {
-    background: #4a90e2;
+  background: var(--occupied-stall-color);
 }
 
 .legend-color.vacant {
-    background: #cccccc;
+  background: var(--vacant-stall-color);
 }
 
 .legend-color.street {
-    background: #2c3e50;
+  background: var(--street-color);
 }
 
-/* Map Container */
+/* ========================================
+   MAP INFO
+   ======================================== */
+
+.map-info {
+  background: rgba(52, 73, 94, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid #34495e;
+  text-align: center;
+}
+
+.current-floor-info h3 {
+  margin: 0 0 10px 0;
+  color: #ecf0f1;
+  font-size: var(--floor-label-font-size);
+}
+
+.current-floor-info p {
+  margin: 0;
+  color: #bdc3c7;
+  font-size: var(--legend-font-size);
+}
+
+/* ========================================
+   MAP CONTAINER
+   ======================================== */
+
 .map-container {
-    margin: 2rem 0;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+  background: rgba(44, 62, 80, 0.9);
+  border-radius: 15px;
+  padding: var(--map-padding);
+  border: 3px solid #34495e;
+  margin-bottom: 30px;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .map-wrapper {
-    position: relative;
-    min-height: 600px;
-    background: #f8f9fa;
+  min-width: 800px;
+  position: relative;
 }
 
 .mall-map {
-    position: relative;
-    width: 100%;
-    height: 600px;
-    overflow: auto;
-    background: linear-gradient(135deg, #e8f4fd 0%, #fff 100%);
+  position: relative;
+  background: #2c3e50;
+  border-radius: 10px;
+  margin: 0 auto;
+  min-height: 600px;
+  overflow: hidden;
 }
 
-/* Loading Indicator */
-.loading-indicator {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: var(--text-secondary);
-}
+/* ========================================
+   STREETS
+   ======================================== */
 
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--border-color);
-    border-top: 4px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Map Grid */
-.map-grid {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
-    display: grid;
-    grid-template-rows: repeat(6, 1fr); /* 5 streets + 1 for main street */
-    grid-template-columns: repeat(10, 1fr); /* 9 blocks + 1 for main street */
-    gap: 8px;
-    padding: 20px;
-    transition: all 0.3s ease;
-}
-
-/* Stalls */
-.stall {
-    background: #4a90e2;
-    border: 2px solid #357abd;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-align: center;
-    overflow: hidden;
-    position: relative;
-}
-
-.stall:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 10;
-}
-
-.stall.vacant {
-    background: #cccccc;
-    border-color: #999999;
-    color: #666666;
-}
-
-.stall.selected {
-    background: #f39c12;
-    border-color: #e67e22;
-    transform: scale(1.1);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    z-index: 20;
-}
-
-/* Stall Sizes */
-.stall.small {
-    font-size: 0.7rem;
-}
-
-.stall.large {
-    font-size: 0.9rem;
-}
-
-.stall.xlarge {
-    font-size: 1rem;
-}
-
-/* Streets */
 .street {
-    background: #2c3e50;
-    border-radius: 4px;
-    position: relative;
+  position: absolute;
+  background: var(--street-color);
+  border: 1px solid #1a252f;
+  z-index: 1;
 }
 
-.street::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 10%;
-    right: 10%;
-    height: 2px;
-    background: #ecf0f1;
-    transform: translateY(-50%);
-}
-
-.main-street {
-    background: #34495e;
-    position: relative;
-}
-
-.main-street::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 10%;
-    bottom: 10%;
-    width: 2px;
-    background: #ecf0f1;
-    transform: translateX(-50%);
-}
-
-/* Street Labels */
-.street-labels {
-    margin: 1rem 0;
-    text-align: center;
-}
-
-.street-label-container {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+.street.main-street {
+  background: var(--main-street-color);
+  z-index: 2;
 }
 
 .street-label {
-    padding: 0.5rem 1rem;
-    background: var(--primary-color);
-    color: white;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
+  position: absolute;
+  color: #ecf0f1;
+  font-size: var(--stall-label-font-size);
+  font-weight: bold;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  text-align: center;
 }
 
-.main-street-label {
-    display: inline-block;
-    padding: 0.5rem 1.5rem;
-    background: var(--accent-color);
-    color: white;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 1rem;
-    transform: rotate(-90deg);
-    position: fixed;
-    left: 10px;
-    top: 50%;
-    transform-origin: center;
-    z-index: 5;
+/* ========================================
+   STALLS
+   ======================================== */
+
+.stall {
+  position: absolute;
+  border: 2px solid var(--stall-border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--hover-transition);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--stall-label-font-size);
+  font-weight: bold;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
 }
 
-/* Floor Colors */
-.mall-map.floor-1 { background: linear-gradient(135deg, #e8f4fd 0%, #fff 100%); }
-.mall-map.floor-2 { background: linear-gradient(135deg, #fff2e8 0%, #fff 100%); }
-.mall-map.floor-3 { background: linear-gradient(135deg, #f0fff0 0%, #fff 100%); }
-.mall-map.floor-4 { background: linear-gradient(135deg, #fff0f5 0%, #fff 100%); }
-.mall-map.floor-5 { background: linear-gradient(135deg, #f5f0ff 0%, #fff 100%); }
+.stall.occupied {
+  background: var(--occupied-stall-color);
+}
 
-/* Stall Modal */
+.stall.vacant {
+  background: var(--vacant-stall-color);
+}
+
+.stall:hover {
+  transform: scale(1.05);
+  z-index: 15;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-color: var(--hover-color);
+  background: var(--hover-color) !important;
+}
+
+.stall-number {
+  font-size: 10px;
+  opacity: 0.9;
+}
+
+.stall-name {
+  font-size: 8px;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* ========================================
+   LOADING INDICATOR
+   ======================================== */
+
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #ecf0f1;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #34495e;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+   STALL MODAL
+   ======================================== */
+
 .stall-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    transition: opacity 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--floor-transition);
 }
 
 .stall-modal.hidden {
-    opacity: 0;
-    pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .modal-content {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: #34495e;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  border: 3px solid #2c3e50;
 }
 
 .modal-close {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--text-secondary);
-    transition: color 0.2s ease;
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #ecf0f1;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
 }
 
 .modal-close:hover {
-    color: var(--primary-color);
+  color: var(--hover-color);
+}
+
+.modal-header {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #2c3e50;
+  padding-bottom: 15px;
 }
 
 .modal-header h2 {
-    margin: 0 0 0.5rem 0;
-    color: var(--primary-color);
+  margin: 0 0 10px 0;
+  color: #ecf0f1;
+  font-size: 1.5em;
 }
 
 .modal-stall-info {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+  display: flex;
+  gap: 15px;
+  color: #bdc3c7;
+  font-size: 14px;
 }
 
-.modal-body > div {
-    margin-bottom: 1rem;
+.modal-body {
+  color: #ecf0f1;
+}
+
+.stall-owner,
+.stall-items {
+  margin-bottom: 15px;
+}
+
+.stall-owner strong,
+.stall-items strong {
+  color: #3498db;
 }
 
 .modal-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .btn-primary,
 .btn-secondary {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s ease;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all var(--hover-transition);
 }
 
 .btn-primary {
-    background: var(--primary-color);
-    color: white;
+  background: var(--floor-btn-active);
+  color: white;
 }
 
 .btn-primary:hover {
-    background: var(--accent-color);
-    transform: translateY(-1px);
+  background: var(--floor-btn-hover);
 }
 
 .btn-secondary {
-    background: var(--bg-secondary);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
+  background: var(--floor-btn-inactive);
+  color: white;
 }
 
 .btn-secondary:hover {
-    background: var(--border-color);
+  background: #6c7b7f;
 }
 
-/* Responsive Design */
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 1200px) {
+  .map-controls {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .floor-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .legend-items {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 768px) {
-    .map-controls {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .floor-buttons {
-        justify-content: center;
-    }
-    
-    .street-label-container {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .main-street-label {
-        position: static;
-        transform: none;
-        margin-top: 1rem;
-    }
-    
-    .mall-map {
-        height: 400px;
-    }
-    
-    .map-grid {
-        gap: 4px;
-        padding: 10px;
-    }
-    
-    .stall {
-        font-size: 0.7rem;
-    }
-    
-    .modal-content {
-        padding: 1.5rem;
-        margin: 1rem;
-    }
-    
-    .modal-actions {
-        flex-direction: column;
-    }
+  :root {
+    --block-size: 6px;
+    --map-padding: 20px;
+  }
+  
+  .main-content {
+    padding: 15px;
+  }
+  
+  .hero-section h1 {
+    font-size: 2em;
+  }
+  
+  .floor-btn {
+    min-width: 140px;
+    padding: 10px 12px;
+  }
+  
+  .modal-content {
+    padding: 20px;
+    margin: 20px;
+  }
+  
+  .stall {
+    font-size: 10px;
+  }
 }
 
 @media (max-width: 480px) {
-    .floor-btn {
-        min-width: 60px;
-        padding: 0.5rem;
-    }
-    
-    .floor-number {
-        font-size: 1.2rem;
-    }
-    
-    .floor-label {
-        font-size: 0.7rem;
-    }
-    
-    .mall-map {
-        height: 300px;
-    }
-    
-    .stall {
-        font-size: 0.6rem;
-    }
+  :root {
+    --block-size: 4px;
+    --map-padding: 15px;
+  }
+  
+  .floor-buttons {
+    flex-direction: column;
+  }
+  
+  .legend-items {
+    flex-direction: column;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
 }

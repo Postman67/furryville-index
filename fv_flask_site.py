@@ -45,8 +45,8 @@ def the_mall():
 
 @app.route('/the-mall/map')
 def the_mall_map():
-    """Interactive Map for The Mall"""
-    return render_template('mall_map.html', title='Mall Map - Furryville', message='Interactive map of The Mall floors')
+    """The Mall Interactive Map"""
+    return render_template('mall_map.html', title='Mall Interactive Map - Furryville', message='Navigate through all 5 floors of The Mall')
 
 @app.route('/about')
 def about():
@@ -188,16 +188,26 @@ def api_the_mall():
     
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT StallNumber, StreetName, IGN, StallName, ItemsSold FROM the_mall ORDER BY StallNumber")
+        # Try to get stall dimensions if they exist, otherwise use defaults
+        cursor.execute("""
+            SELECT StallNumber, StreetName, IGN, StallName, ItemsSold,
+                   COALESCE(stall_width, 6) as stall_width,
+                   COALESCE(stall_depth, 9) as stall_depth
+            FROM the_mall 
+            ORDER BY StallNumber
+        """)
         
         shops = []
-        for (stall_number, street_name, ign, stall_name, items_sold) in cursor:
+        for row in cursor:
+            stall_number, street_name, ign, stall_name, items_sold, stall_width, stall_depth = row
             shops.append({
                 "StallNumber": stall_number,
                 "StreetName": street_name,
                 "IGN": ign,
                 "StallName": stall_name,
-                "ItemsSold": items_sold
+                "ItemsSold": items_sold,
+                "stall_width": stall_width,
+                "stall_depth": stall_depth
             })
         
         cursor.close()
@@ -210,12 +220,39 @@ def api_the_mall():
         
     except mariadb.Error as e:
         print(f"Error querying the_mall: {e}")
-        if conn:
+        # Fallback to original query if stall_width/stall_depth columns don't exist
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT StallNumber, StreetName, IGN, StallName, ItemsSold FROM the_mall ORDER BY StallNumber")
+            
+            shops = []
+            for (stall_number, street_name, ign, stall_name, items_sold) in cursor:
+                shops.append({
+                    "StallNumber": stall_number,
+                    "StreetName": street_name,
+                    "IGN": ign,
+                    "StallName": stall_name,
+                    "ItemsSold": items_sold,
+                    "stall_width": 6,  # Default fallback
+                    "stall_depth": 9   # Default fallback
+                })
+            
+            cursor.close()
             conn.close()
-        return jsonify({
-            "error": "Database query failed",
-            "shops": []
-        }), 500
+            
+            return jsonify({
+                "shops": shops,
+                "count": len(shops)
+            })
+            
+        except mariadb.Error as e2:
+            print(f"Error with fallback query: {e2}")
+            if conn:
+                conn.close()
+            return jsonify({
+                "error": "Database query failed",
+                "shops": []
+            }), 500
 
 @app.route('/api/reviews/<location>/<path:identifier>')
 def api_reviews(location, identifier):

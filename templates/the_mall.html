@@ -21,18 +21,16 @@
             </div>
         </div>
 
-        <section class="mall-navigation">
+        <nav class="mall-navigation">
             <div class="nav-buttons">
                 <a href="{{ url_for('the_mall_map') }}" class="nav-btn map-btn">
                     🗺️ Interactive Map
-                    <span class="nav-desc">Browse all 5 floors visually</span>
                 </a>
-                <button class="nav-btn list-btn active">
-                    📋 Stall List
-                    <span class="nav-desc">Search and filter stalls</span>
+                <button class="nav-btn active" onclick="location.reload()">
+                    📋 Shop List
                 </button>
             </div>
-        </section>
+        </nav>
 
         <section class="shop-section">
             <div class="search-container">
