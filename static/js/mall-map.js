@@ -1,8 +1,27 @@
 /**
- * Interactive Mall Map System
+ * ========================================
+ * INTERACTIVE MALL MAP SYSTEM
+ * ========================================
  * 
- * This file handles the rendering and interaction of the top-down mall map.
- * The map displays stalls positioned according to Minecraft coordinates acro/**
+ * This system renders a top-down interactive map of the Furryville Mall.
+ * Features:
+ * - Grid-based positioning using Minecraft block coordinates
+ * - Multi-floor support (1-5)
+ * - Dynamic stall placement based on configuration
+ * - Section-based stall assignment (North/South sides, West/East of Main Street)
+ * - Responsive design with mobile support
+ * 
+ * Architecture:
+ * - MAP_CONFIG: Central configuration for all map settings
+ * - Stall positioning: Uses cumulative width calculation and section assignment
+ * - Orientation logic: Odd stall numbers = South side, Even = North side
+ */
+
+/* ========================================
+   UTILITY FUNCTIONS
+   ======================================== */
+
+/**
  * Get street configuration by name
  * @param {string} streetName - Name of the street
  * @returns {Object|null} Street configuration object
@@ -12,7 +31,7 @@ function getStreetByName(streetName) {
 }
 
 /**
- * Get street index by name (legacy function for compatibility)
+ * Get street index by name (legacy compatibility function)
  * @param {string} streetName - Name of the street
  * @returns {number} Street index or -1 if not found
  */
@@ -29,7 +48,7 @@ function getStreetIndex(streetName) {
  * @returns {number} Number of stalls in that section
  */
 function getStallCountForSection(streetName, isNorth, isWest) {
-    // Normalize street name for config lookup
+    // Normalize street name for config lookup (remove spaces)
     const normalizedStreetName = streetName.replace(/\s+/g, '');
     const sideStr = isNorth ? 'North' : 'South';
     const sectionStr = isWest ? 'West' : 'East';
@@ -39,62 +58,68 @@ function getStallCountForSection(streetName, isNorth, isWest) {
 }
 
 /* ========================================
-   EASY TO CHANGE CONFIGURATION VARIABLES
+   CORE CONFIGURATION
    ======================================== */
 
 const MAP_CONFIG = {
-    // Grid-based configuration (Minecraft blocks)
-    GRID_WIDTH: 117,                  // Total grid width in blocks
-    GRID_HEIGHT: 102,                 // Total grid height in blocks
+    // === GRID & DIMENSIONS ===
+    GRID_WIDTH: 117,                  // Total map width in Minecraft blocks
+    GRID_HEIGHT: 102,                 // Total map height in Minecraft blocks
+    BLOCK_SIZE: 8,                    // Pixels per Minecraft block (visual scaling)
     
-    // Visual scaling
-    BLOCK_SIZE: 8,                    // Pixels per Minecraft block
+    // === STREET LAYOUT ===
+    STREET_LENGTH: 117,               // Length of horizontal streets (blocks)
+    STREET_WIDTH: 3,                  // Visual width of streets (blocks)
+    STREET_SEPARATION: 20,            // Distance between horizontal streets (blocks)
     
-    // Street configuration
-    STREET_LENGTH: 117,               // Length of horizontal streets in blocks
-    STREET_WIDTH: 3,                  // Width of streets in blocks (visual only) - made wider
-    STREET_SEPARATION: 20,            // Distance between horizontal streets in blocks
+    // === MAIN STREET (VERTICAL) ===
+    MAIN_STREET_X_BLOCK: 55,          // X position where Main Street starts (blocks)
+    MAIN_STREET_WIDTH: 9,             // Width of Main Street (blocks)
     
-    // Streets layout (Y positions in blocks from top)
+    // === STREET DEFINITIONS ===
+    // Y positions in blocks from top of map
     STREETS: [
-        { name: "Wall Street", index: 0, yBlock: 10 },      // Northernmost street
+        { name: "Wall Street", index: 0, yBlock: 10 },
         { name: "Artist Alley", index: 1, yBlock: 30 },
         { name: "Woke Ave", index: 2, yBlock: 50 },
         { name: "Poland Street", index: 3, yBlock: 70 },
-        { name: "Five", index: -1, yBlock: -1 }             // Not displayed
+        { name: "Five", index: -1, yBlock: -1 }    // Special case - not displayed
     ],
     
-    // Main Street (vertical)
-    MAIN_STREET_X_BLOCK: 55,          // X position where Main Street starts (block)
-    MAIN_STREET_WIDTH: 9,             // Width of Main Street in blocks
+    // === STALL DEFAULTS ===
+    MAX_STALLS_PER_SIDE: 13,          // Fallback maximum stalls per side
+    DEFAULT_STALL_WIDTH: 4,           // Default stall width (blocks)
+    DEFAULT_STALL_DEPTH: 4,           // Default stall depth (blocks)
     
-    // Stall configuration
-    MAX_STALLS_PER_SIDE: 13,          // Maximum 13 stalls per side of Main Street (fallback)
-    DEFAULT_STALL_WIDTH: 4,           // Default stall width in blocks
-    DEFAULT_STALL_DEPTH: 4,           // Default stall depth in blocks
+    // === SECTION-SPECIFIC STALL COUNTS ===
+    // Format: [StreetName][North/South][West/East]_StallCount
+    // These control how many stalls can be placed in each section
     
-    // Street-specific stall counts (North/South sides, West/East of Main Street)
+    // Wall Street
     WallStreetNorthWest_StallCount: 6,
     WallStreetNorthEast_StallCount: 6,
     WallStreetSouthWest_StallCount: 6,
     WallStreetSouthEast_StallCount: 6,
     
+    // Artist Alley
     ArtistAlleyNorthWest_StallCount: 8,
     ArtistAlleyNorthEast_StallCount: 6,
     ArtistAlleySouthWest_StallCount: 8,
     ArtistAlleySouthEast_StallCount: 6,
     
+    // Woke Ave
     WokeAveNorthWest_StallCount: 7,
     WokeAveNorthEast_StallCount: 6,
     WokeAveSouthWest_StallCount: 6,
     WokeAveSouthEast_StallCount: 6,
     
+    // Poland Street
     PolandStreetNorthWest_StallCount: 7,
     PolandStreetNorthEast_StallCount: 6,
     PolandStreetSouthWest_StallCount: 6,
     PolandStreetSouthEast_StallCount: 6,
     
-    // Floor configuration
+    // === FLOOR CONFIGURATION ===
     FLOORS: [1, 2, 3, 4, 5],
     FLOOR_LABELS: {
         1: "First Floor",
@@ -104,57 +129,72 @@ const MAP_CONFIG = {
         5: "Fifth Floor"
     },
     
-    // Visual settings
-    SHOW_STALL_NUMBERS: true,         // Show stall numbers on map
-    SHOW_STREET_LABELS: true,         // Show street name labels
-    ENABLE_HOVER_EFFECTS: true,       // Enable hover animations
-    SHOW_GRID: true,                 // Show grid lines for debugging
+    // === VISUAL SETTINGS ===
+    SHOW_STALL_NUMBERS: true,         // Display stall numbers on map
+    SHOW_STREET_LABELS: true,         // Display street name labels
+    ENABLE_HOVER_EFFECTS: true,       // Enable stall hover animations
+    SHOW_GRID: true,                  // Show grid lines (for debugging)
     
-    // Animation settings
-    HOVER_SCALE: 1.05,               // Scale factor on hover
-    ANIMATION_DURATION: 200,         // MS for hover animations
+    // === ANIMATION SETTINGS ===
+    HOVER_SCALE: 1.05,                // Scale factor on stall hover
+    ANIMATION_DURATION: 200,          // Hover animation duration (ms)
     
-    // Map layout settings
-    MAP_MARGIN: 120,                  // Pixels margin around map - increased for better label visibility
+    // === LAYOUT SETTINGS ===
+    MAP_MARGIN: 120,                  // Margin around map for labels (pixels)
     
-    // Colors (can override CSS if needed)
+    // === COLOR OVERRIDES ===
+    // These can override CSS variables if needed
     COLORS: {
-        OCCUPIED: '#4a90e2',
-        VACANT: '#95a5a6',
-        STREET: '#34495e',
-        MAIN_STREET: '#2c3e50',
-        HOVER: '#f39c12'
+        OCCUPIED: '#4a90e2',          // Occupied stall color
+        VACANT: '#95a5a6',            // Vacant stall color
+        STREET: '#34495e',            // Street color
+        MAIN_STREET: '#2c3e50',       // Main Street color
+        HOVER: '#f39c12'              // Hover highlight color
     }
 };
 
 /* ========================================
-   GLOBAL STATE
+   GLOBAL STATE MANAGEMENT
    ======================================== */
 
+/**
+ * Central data store for the map application
+ */
 let mapData = {
-    stalls: [],
-    currentFloor: 1,
-    isLoading: true
+    stalls: [],                       // All stall data from API
+    currentFloor: 1,                  // Currently displayed floor
+    isLoading: true                   // Loading state flag
 };
 
+/**
+ * References to DOM elements for performance
+ */
 let mapElements = {
-    mapContainer: null,
-    floorButtons: [],
-    currentFloorDisplay: null,
-    stallCountDisplay: null,
-    modal: null
+    mapContainer: null,               // Main map container
+    floorButtons: [],                 // Floor selection buttons
+    currentFloorDisplay: null,        // Current floor number display
+    stallCountDisplay: null,          // Stall count display
+    modal: null                       // Stall details modal
 };
 
 /* ========================================
-   INITIALIZATION
+   APPLICATION INITIALIZATION
    ======================================== */
 
+/**
+ * Initialize the application when DOM is ready
+ */
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing Interactive Mall Map...');
+    
     initializeMapElements();
     setupEventListeners();
     loadMapData();
 });
 
+/**
+ * Cache references to DOM elements
+ */
 function initializeMapElements() {
     mapElements.mapContainer = document.getElementById('mall-map');
     mapElements.floorButtons = document.querySelectorAll('.floor-btn');
@@ -162,11 +202,19 @@ function initializeMapElements() {
     mapElements.stallCountDisplay = document.getElementById('stall-count');
     mapElements.modal = document.getElementById('stall-modal');
     
-    console.log('Map elements initialized');
+    if (!mapElements.mapContainer) {
+        console.error('Map container not found!');
+        return;
+    }
+    
+    console.log('Map elements initialized successfully');
 }
 
+/**
+ * Set up event listeners for user interactions
+ */
 function setupEventListeners() {
-    // Floor selector buttons
+    // Floor selection buttons
     mapElements.floorButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             const floor = parseInt(e.currentTarget.dataset.floor);
@@ -199,12 +247,15 @@ function setupEventListeners() {
 }
 
 /* ========================================
-   DATA LOADING
+   DATA LOADING & ERROR HANDLING
    ======================================== */
 
+/**
+ * Load stall data from the API
+ */
 async function loadMapData() {
     try {
-        console.log('Loading map data...');
+        console.log('Loading mall data from API...');
         const response = await fetch('/api/the-mall');
         
         if (!response.ok) {
@@ -215,9 +266,9 @@ async function loadMapData() {
         mapData.stalls = data.shops || [];
         mapData.isLoading = false;
         
-        console.log(`Loaded ${mapData.stalls.length} stalls`);
+        console.log(`Successfully loaded ${mapData.stalls.length} stalls`);
         
-        // Initialize map with floor 1
+        // Initialize map display
         renderMap();
         updateUI();
         
@@ -227,6 +278,10 @@ async function loadMapData() {
     }
 }
 
+/**
+ * Display an error message to the user
+ * @param {string} message - Error message to display
+ */
 function showError(message) {
     if (mapElements.mapContainer) {
         mapElements.mapContainer.innerHTML = `
@@ -238,9 +293,14 @@ function showError(message) {
 }
 
 /* ========================================
-   COORDINATE CALCULATION
+   STALL POSITIONING SYSTEM
    ======================================== */
 
+/**
+ * Parse stall number into floor and position components
+ * @param {number|string} stallNumber - 3-digit stall number (e.g., 101, 205)
+ * @returns {Object} Object with floor and position properties
+ */
 function parseStallNumber(stallNumber) {
     const stallStr = stallNumber.toString().padStart(3, '0');
     const floor = parseInt(stallStr[0]);
@@ -249,139 +309,183 @@ function parseStallNumber(stallNumber) {
     return { floor, position };
 }
 
-function getStreetIndex(streetName) {
-    const street = MAP_CONFIG.STREETS.find(s => s.name === streetName);
-    return street ? street.index : 0;
-}
-
 /**
- * Calculate stall position using grid-based system with new orientation logic
+ * Calculate exact position for a stall on the map
+ * 
+ * POSITIONING LOGIC:
+ * - Odd stall positions = South side of street
+ * - Even stall positions = North side of street  
+ * - Stalls fill West sections first, then East sections
+ * - Position is based on cumulative width of previous stalls
+ * 
  * @param {Object} stall - Stall data from database
  * @param {Array} allStalls - All stalls for width calculation
- * @returns {Object|null} Position object with x, y, width, height, anchor info
+ * @returns {Object|null} Position object or null if no space
  */
 function calculateStallPosition(stall, allStalls) {
     const { floor, position } = parseStallNumber(stall.StallNumber);
     const street = getStreetByName(stall.StreetName);
     
     // Skip if street is not displayed
-    if (!street || street.index === -1) return null;
+    if (!street || street.index === -1) {
+        return null;
+    }
     
     // Get stall dimensions (in blocks)
     const stallWidthBlocks = stall.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH;
     const stallDepthBlocks = stall.stall_depth || MAP_CONFIG.DEFAULT_STALL_DEPTH;
     
-    // NEW LOGIC: Determine side using stall number (odd = south, even = north)
+    // Determine side using stall number (odd = south, even = north)
     const isNorthSide = position % 2 === 0;
     
-    // Determine which section this stall should be in based on available space
-    const northWestCount = getStallCountForSection(stall.StreetName, true, true);
-    const northEastCount = getStallCountForSection(stall.StreetName, true, false);
-    const southWestCount = getStallCountForSection(stall.StreetName, false, true);
-    const southEastCount = getStallCountForSection(stall.StreetName, false, false);
+    // Get section capacities for this street
+    const sectionCounts = getSectionCounts(stall.StreetName);
     
-    // Calculate which position this stall should be in its side
-    let isWestOfMainStreet = true;
-    let positionInSection = 1;
+    // Calculate section assignment and position
+    const sectionInfo = calculateSectionAssignment(stall, allStalls, isNorthSide, sectionCounts);
+    if (!sectionInfo) {
+        return null; // No space available
+    }
+    
+    // Calculate cumulative width from previous stalls in same section
+    const cumulativeWidth = calculateCumulativeWidth(stall, allStalls, sectionInfo);
+    
+    // Calculate final pixel coordinates
+    return calculateFinalPosition(
+        stall, 
+        street, 
+        stallWidthBlocks, 
+        stallDepthBlocks, 
+        isNorthSide, 
+        sectionInfo.isWestOfMainStreet, 
+        cumulativeWidth
+    );
+}
+
+/**
+ * Get stall count configuration for all sections of a street
+ * @param {string} streetName - Name of the street
+ * @returns {Object} Object with counts for each section
+ */
+function getSectionCounts(streetName) {
+    return {
+        northWest: getStallCountForSection(streetName, true, true),
+        northEast: getStallCountForSection(streetName, true, false),
+        southWest: getStallCountForSection(streetName, false, true),
+        southEast: getStallCountForSection(streetName, false, false)
+    };
+}
+
+/**
+ * Calculate which section a stall should be placed in
+ * @param {Object} stall - Stall data
+ * @param {Array} allStalls - All stalls for counting
+ * @param {boolean} isNorthSide - True if stall is on north side
+ * @param {Object} sectionCounts - Available space in each section
+ * @returns {Object|null} Section assignment info or null if no space
+ */
+function calculateSectionAssignment(stall, allStalls, isNorthSide, sectionCounts) {
+    const { floor, position } = parseStallNumber(stall.StallNumber);
+    
+    // Count stalls on same side with lower position numbers
+    const stallsOnSameSide = allStalls.filter(s => {
+        const { floor: sFloor, position: sPosition } = parseStallNumber(s.StallNumber);
+        return sFloor === floor && 
+               s.StreetName === stall.StreetName && 
+               (sPosition % 2 === 0) === isNorthSide && // Same side
+               sPosition < position; // Lower position numbers
+    }).length;
+    
+    // Determine section assignment based on available space
+    let isWestOfMainStreet, positionInSection, maxStalls;
     
     if (isNorthSide) {
-        // For north side stalls, fill west section first, then east
-        const northStallsOnSameSide = allStalls.filter(s => {
-            const { floor: sFloor, position: sPosition } = parseStallNumber(s.StallNumber);
-            return sFloor === floor && 
-                   s.StreetName === stall.StreetName && 
-                   sPosition % 2 === 0 && // North side
-                   sPosition < position; // Lower position numbers
-        }).length;
-        
-        if (northStallsOnSameSide < northWestCount) {
+        if (stallsOnSameSide < sectionCounts.northWest) {
             isWestOfMainStreet = true;
-            positionInSection = northStallsOnSameSide + 1;
+            positionInSection = stallsOnSameSide + 1;
+            maxStalls = sectionCounts.northWest + sectionCounts.northEast;
         } else {
             isWestOfMainStreet = false;
-            positionInSection = northStallsOnSameSide - northWestCount + 1;
-        }
-        
-        // Check if this stall exceeds the available space
-        if (northStallsOnSameSide >= (northWestCount + northEastCount)) {
-            return null; // No space for this stall
+            positionInSection = stallsOnSameSide - sectionCounts.northWest + 1;
+            maxStalls = sectionCounts.northWest + sectionCounts.northEast;
         }
     } else {
-        // For south side stalls, fill west section first, then east
-        const southStallsOnSameSide = allStalls.filter(s => {
-            const { floor: sFloor, position: sPosition } = parseStallNumber(s.StallNumber);
-            return sFloor === floor && 
-                   s.StreetName === stall.StreetName && 
-                   sPosition % 2 === 1 && // South side
-                   sPosition < position; // Lower position numbers
-        }).length;
-        
-        if (southStallsOnSameSide < southWestCount) {
+        if (stallsOnSameSide < sectionCounts.southWest) {
             isWestOfMainStreet = true;
-            positionInSection = southStallsOnSameSide + 1;
+            positionInSection = stallsOnSameSide + 1;
+            maxStalls = sectionCounts.southWest + sectionCounts.southEast;
         } else {
             isWestOfMainStreet = false;
-            positionInSection = southStallsOnSameSide - southWestCount + 1;
-        }
-        
-        // Check if this stall exceeds the available space
-        if (southStallsOnSameSide >= (southWestCount + southEastCount)) {
-            return null; // No space for this stall
+            positionInSection = stallsOnSameSide - sectionCounts.southWest + 1;
+            maxStalls = sectionCounts.southWest + sectionCounts.southEast;
         }
     }
     
-    // Calculate cumulative width from previous stalls in the same section
+    // Check if stall exceeds available space
+    if (stallsOnSameSide >= maxStalls) {
+        console.warn(`Stall ${stall.StallNumber} exceeds available space on ${stall.StreetName}`);
+        return null;
+    }
+    
+    return { isWestOfMainStreet, positionInSection };
+}
+
+/**
+ * Calculate cumulative width from previous stalls in the same section
+ * @param {Object} stall - Current stall
+ * @param {Array} allStalls - All stalls
+ * @param {Object} sectionInfo - Section assignment info
+ * @returns {number} Cumulative width in blocks
+ */
+function calculateCumulativeWidth(stall, allStalls, sectionInfo) {
+    const { floor, position } = parseStallNumber(stall.StallNumber);
+    const isNorthSide = position % 2 === 0;
+    const { isWestOfMainStreet } = sectionInfo;
+    
+    // Find all stalls in the same section that come before this one
     const sameSection = allStalls.filter(s => {
         const { floor: sFloor, position: sPosition } = parseStallNumber(s.StallNumber);
         const sIsNorthSide = sPosition % 2 === 0;
         
-        // Determine which section the comparison stall is in
-        let sIsWestOfMainStreet = true;
-        if (sIsNorthSide) {
-            const sNorthStallsOnSameSide = allStalls.filter(ss => {
-                const { floor: ssFloor, position: ssPosition } = parseStallNumber(ss.StallNumber);
-                return ssFloor === sFloor && 
-                       ss.StreetName === s.StreetName && 
-                       ssPosition % 2 === 0 && 
-                       ssPosition < sPosition;
-            }).length;
-            sIsWestOfMainStreet = sNorthStallsOnSameSide < northWestCount;
-        } else {
-            const sSouthStallsOnSameSide = allStalls.filter(ss => {
-                const { floor: ssFloor, position: ssPosition } = parseStallNumber(ss.StallNumber);
-                return ssFloor === sFloor && 
-                       ss.StreetName === s.StreetName && 
-                       ssPosition % 2 === 1 && 
-                       ssPosition < sPosition;
-            }).length;
-            sIsWestOfMainStreet = sSouthStallsOnSameSide < southWestCount;
-        }
+        // Calculate which section the comparison stall is in
+        const sectionCounts = getSectionCounts(s.StreetName);
+        const sSectionInfo = calculateSectionAssignment(s, allStalls, sIsNorthSide, sectionCounts);
         
         return sFloor === floor && 
                s.StreetName === stall.StreetName && 
                sIsNorthSide === isNorthSide && 
-               sIsWestOfMainStreet === isWestOfMainStreet &&
+               sSectionInfo && sSectionInfo.isWestOfMainStreet === isWestOfMainStreet &&
                sPosition < position;
     });
     
-    let cumulativeWidthBlocks = 0;
-    sameSection.forEach(prevStall => {
-        const prevWidth = prevStall.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH;
-        cumulativeWidthBlocks += prevWidth;
-    });
-    
+    // Sum up the widths of all previous stalls in the section
+    return sameSection.reduce((total, prevStall) => {
+        return total + (prevStall.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH);
+    }, 0);
+}
+
+/**
+ * Calculate final pixel coordinates for stall rendering
+ * @param {Object} stall - Stall data
+ * @param {Object} street - Street configuration
+ * @param {number} stallWidthBlocks - Stall width in blocks
+ * @param {number} stallDepthBlocks - Stall depth in blocks
+ * @param {boolean} isNorthSide - True if on north side
+ * @param {boolean} isWestOfMainStreet - True if west of Main Street
+ * @param {number} cumulativeWidth - Cumulative width in blocks
+ * @returns {Object} Final position object with pixel coordinates
+ */
+function calculateFinalPosition(stall, street, stallWidthBlocks, stallDepthBlocks, isNorthSide, isWestOfMainStreet, cumulativeWidth) {
     // Calculate X position in blocks
     let xBlock;
     if (isWestOfMainStreet) {
-        xBlock = cumulativeWidthBlocks;
+        xBlock = cumulativeWidth;
     } else {
-        xBlock = MAP_CONFIG.MAIN_STREET_X_BLOCK + MAP_CONFIG.MAIN_STREET_WIDTH + cumulativeWidthBlocks;
+        xBlock = MAP_CONFIG.MAIN_STREET_X_BLOCK + MAP_CONFIG.MAIN_STREET_WIDTH + cumulativeWidth;
     }
     
     // Calculate Y position based on street and side
-    let yBlock;
-    let anchorSide;
-    
+    let yBlock, anchorSide;
     if (isNorthSide) {
         // North side: stall extends north from the street
         yBlock = street.yBlock - stallDepthBlocks;
@@ -409,65 +513,71 @@ function calculateStallPosition(stall, allStalls) {
         heightBlocks: stallDepthBlocks,
         isNorthSide: isNorthSide,
         isWestOfMainStreet: isWestOfMainStreet,
-        positionInSection: positionInSection,
         anchorSide: anchorSide,
         street: street.name
     };
 }
 
 /* ========================================
-   MAP RENDERING
+   MAP RENDERING SYSTEM
    ======================================== */
 
+/**
+ * Main rendering function - orchestrates the entire map display
+ */
 function renderMap() {
     if (mapData.isLoading || !mapElements.mapContainer) {
+        console.warn('Cannot render map: loading or container not available');
         return;
     }
     
     console.log(`Rendering map for floor ${mapData.currentFloor}`);
     
-    // Clear existing map
+    // Clear existing content
     mapElements.mapContainer.innerHTML = '';
     
-    // Filter stalls for current floor
-    const currentFloorStalls = mapData.stalls.filter(stall => {
-        const { floor } = parseStallNumber(stall.StallNumber);
-        return floor === mapData.currentFloor;
-    });
-    
+    // Get stalls for current floor
+    const currentFloorStalls = getCurrentFloorStalls();
     console.log(`Found ${currentFloorStalls.length} stalls on floor ${mapData.currentFloor}`);
     
-    // Calculate map dimensions
-    const mapDimensions = calculateMapDimensions(currentFloorStalls);
+    // Set up map container
+    setupMapContainer();
     
-    // Set map container size
-    mapElements.mapContainer.style.width = mapDimensions.width + 'px';
-    mapElements.mapContainer.style.height = mapDimensions.height + 'px';
-    
-    // Render streets first (background layer)
+    // Render in layers (back to front)
     renderStreets();
+    renderMainStreet();
+    renderStalls(currentFloorStalls);
     
-    // Render Main Street with calculated position
-    const mainStreetX = renderMainStreet(currentFloorStalls);
-    
-    // Render stalls
-    currentFloorStalls.forEach(stall => {
-        renderStall(stall, currentFloorStalls);
-    });
-    
-    // Render street labels
     if (MAP_CONFIG.SHOW_STREET_LABELS) {
-        renderStreetLabels(mainStreetX);
+        renderStreetLabels();
     }
 }
 
 /**
+ * Get all stalls for the currently selected floor
+ * @returns {Array} Array of stall objects
+ */
+function getCurrentFloorStalls() {
+    return mapData.stalls.filter(stall => {
+        const { floor } = parseStallNumber(stall.StallNumber);
+        return floor === mapData.currentFloor;
+    });
+}
+
+/**
+ * Set up the map container dimensions
+ */
+function setupMapContainer() {
+    const dimensions = calculateMapDimensions();
+    mapElements.mapContainer.style.width = dimensions.width + 'px';
+    mapElements.mapContainer.style.height = dimensions.height + 'px';
+}
+
+/**
  * Calculate map dimensions using grid system
- * @param {Array} stalls - Array of stall data
  * @returns {Object} Map dimensions with width and height
  */
-function calculateMapDimensions(stalls) {
-    // Use fixed grid dimensions
+function calculateMapDimensions() {
     const widthPixels = MAP_CONFIG.GRID_WIDTH * MAP_CONFIG.BLOCK_SIZE + (MAP_CONFIG.MAP_MARGIN * 2);
     const heightPixels = MAP_CONFIG.GRID_HEIGHT * MAP_CONFIG.BLOCK_SIZE + (MAP_CONFIG.MAP_MARGIN * 2);
     
@@ -480,7 +590,7 @@ function calculateMapDimensions(stalls) {
 }
 
 /**
- * Render horizontal streets on the map
+ * Render all horizontal streets as background elements
  */
 function renderStreets() {
     MAP_CONFIG.STREETS.forEach(street => {
@@ -501,15 +611,11 @@ function renderStreets() {
 }
 
 /**
- * Render Main Street (vertical) on the map
- * @param {Array} stalls - Array of stall data (not used in grid system but kept for compatibility)
- * @returns {number} X position of Main Street in pixels
+ * Render Main Street (vertical divider) as a background element
  */
-function renderMainStreet(stalls) {
-    // Calculate Main Street position in pixels
+function renderMainStreet() {
     const mainStreetXPixels = MAP_CONFIG.MAP_MARGIN + (MAP_CONFIG.MAIN_STREET_X_BLOCK * MAP_CONFIG.BLOCK_SIZE);
     
-    // Render Main Street (vertical)
     const mainStreet = document.createElement('div');
     mainStreet.className = 'street main-street';
     mainStreet.style.position = 'absolute';
@@ -519,16 +625,22 @@ function renderMainStreet(stalls) {
     mainStreet.style.height = (MAP_CONFIG.GRID_HEIGHT * MAP_CONFIG.BLOCK_SIZE) + 'px';
     
     mapElements.mapContainer.appendChild(mainStreet);
-    
-    return mainStreetXPixels;
 }
 
 /**
- * Render street labels on the map
- * @param {number} mainStreetXPixels - X position of Main Street in pixels
+ * Render all stalls for the current floor
+ * @param {Array} currentFloorStalls - Stalls to render
  */
-function renderStreetLabels(mainStreetXPixels) {
-    // Render horizontal street labels
+function renderStalls(currentFloorStalls) {
+    currentFloorStalls.forEach(stall => {
+        renderStall(stall, currentFloorStalls);
+    });
+}
+
+/**
+ * Render street name labels
+ */
+function renderStreetLabels() {
     MAP_CONFIG.STREETS.forEach(street => {
         // Skip streets that aren't displayed
         if (street.index === -1) return;
@@ -537,42 +649,38 @@ function renderStreetLabels(mainStreetXPixels) {
         label.className = 'street-label';
         label.textContent = street.name;
         label.style.position = 'absolute';
-        label.style.left = (MAP_CONFIG.MAP_MARGIN - 15) + 'px'; // Moved further left
-        label.style.top = (MAP_CONFIG.MAP_MARGIN + (street.yBlock * MAP_CONFIG.BLOCK_SIZE) + 8) + 'px'; // Better vertical centering
+        label.style.left = (MAP_CONFIG.MAP_MARGIN - 15) + 'px';
+        label.style.top = (MAP_CONFIG.MAP_MARGIN + (street.yBlock * MAP_CONFIG.BLOCK_SIZE) + 8) + 'px';
         label.style.transform = 'translateX(-100%)';
-        label.style.zIndex = '100'; // Ensure labels are on top
-        label.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'; // Semi-transparent background
-        label.style.padding = '2px 6px'; // Some padding for readability
-        label.style.borderRadius = '3px'; // Rounded corners
-        label.style.fontSize = '12px'; // Consistent font size
-        label.style.fontWeight = 'bold'; // Make labels more visible
+        label.style.zIndex = '100';
         
         mapElements.mapContainer.appendChild(label);
     });
     
-    // Main Street label
+    // Main Street label (vertical)
+    const mainStreetXPixels = MAP_CONFIG.MAP_MARGIN + (MAP_CONFIG.MAIN_STREET_X_BLOCK * MAP_CONFIG.BLOCK_SIZE);
     const mainLabel = document.createElement('div');
-    mainLabel.className = 'street-label';
+    mainLabel.className = 'street-label main-street-label';
     mainLabel.textContent = 'Main Street';
     mainLabel.style.position = 'absolute';
     mainLabel.style.left = (mainStreetXPixels + (MAP_CONFIG.MAIN_STREET_WIDTH * MAP_CONFIG.BLOCK_SIZE / 2)) + 'px';
-    mainLabel.style.top = (MAP_CONFIG.MAP_MARGIN - 15) + 'px'; // Moved further up
+    mainLabel.style.top = (MAP_CONFIG.MAP_MARGIN - 15) + 'px';
     mainLabel.style.transform = 'translateY(-100%) translateX(-50%) rotate(-90deg)';
     mainLabel.style.transformOrigin = 'center bottom';
-    mainLabel.style.zIndex = '100'; // Ensure labels are on top
-    mainLabel.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'; // Semi-transparent background
-    mainLabel.style.padding = '2px 6px'; // Some padding for readability
-    mainLabel.style.borderRadius = '3px'; // Rounded corners
-    mainLabel.style.fontSize = '12px'; // Consistent font size
-    mainLabel.style.fontWeight = 'bold'; // Make labels more visible
+    mainLabel.style.zIndex = '100';
     
     mapElements.mapContainer.appendChild(mainLabel);
 }
 
+/**
+ * Render an individual stall on the map
+ * @param {Object} stall - Stall data from database
+ * @param {Array} allStalls - All stalls for position calculation
+ */
 function renderStall(stall, allStalls) {
     const position = calculateStallPosition(stall, allStalls);
     
-    // Skip if position calculation failed (e.g., stall beyond layout limits)
+    // Skip if position calculation failed
     if (!position) {
         console.log(`Skipping stall ${stall.StallNumber} - position beyond layout limits`);
         return;
@@ -580,6 +688,7 @@ function renderStall(stall, allStalls) {
     
     const isOccupied = stall.IGN && stall.IGN.trim() !== '';
     
+    // Create stall element
     const stallElement = document.createElement('div');
     stallElement.className = `stall ${isOccupied ? 'occupied' : 'vacant'}`;
     stallElement.style.position = 'absolute';
@@ -590,19 +699,14 @@ function renderStall(stall, allStalls) {
     stallElement.dataset.stallNumber = stall.StallNumber;
     stallElement.dataset.stallData = JSON.stringify(stall);
     
-    // Add stall content - only show number
-    let content = '';
+    // Add stall content
     if (MAP_CONFIG.SHOW_STALL_NUMBERS) {
-        content += `<div class="stall-number">${stall.StallNumber}</div>`;
+        stallElement.innerHTML = `<div class="stall-number">${stall.StallNumber}</div>`;
     }
-    stallElement.innerHTML = content;
     
-    // Add click handler
-    stallElement.addEventListener('click', () => {
-        showStallModal(stall);
-    });
+    // Add event handlers
+    stallElement.addEventListener('click', () => showStallModal(stall));
     
-    // Add hover effects if enabled
     if (MAP_CONFIG.ENABLE_HOVER_EFFECTS) {
         stallElement.addEventListener('mouseenter', () => {
             stallElement.style.zIndex = '20';
@@ -617,22 +721,31 @@ function renderStall(stall, allStalls) {
 }
 
 /* ========================================
-   FLOOR SWITCHING
+   FLOOR NAVIGATION SYSTEM
    ======================================== */
 
+/**
+ * Switch to a different floor
+ * @param {number} floor - Floor number to switch to
+ */
 function switchToFloor(floor) {
-    if (floor === mapData.currentFloor) return;
+    if (floor === mapData.currentFloor) {
+        console.log(`Already on floor ${floor}`);
+        return;
+    }
     
     console.log(`Switching to floor ${floor}`);
     mapData.currentFloor = floor;
     
-    // Update UI
+    // Update all UI components
     updateFloorButtons();
     renderMap();
-    updateStallCount();
-    updateCurrentFloorDisplay();
+    updateUI();
 }
 
+/**
+ * Update floor button visual states
+ */
 function updateFloorButtons() {
     mapElements.floorButtons.forEach(button => {
         const buttonFloor = parseInt(button.dataset.floor);
@@ -644,20 +757,22 @@ function updateFloorButtons() {
     });
 }
 
+/**
+ * Update all UI components with current state
+ */
 function updateUI() {
     updateFloorButtons();
     updateStallCount();
     updateCurrentFloorDisplay();
 }
 
+/**
+ * Update the stall count display
+ */
 function updateStallCount() {
     if (!mapElements.stallCountDisplay) return;
     
-    const currentFloorStalls = mapData.stalls.filter(stall => {
-        const { floor } = parseStallNumber(stall.StallNumber);
-        return floor === mapData.currentFloor;
-    });
-    
+    const currentFloorStalls = getCurrentFloorStalls();
     const occupiedCount = currentFloorStalls.filter(stall => 
         stall.IGN && stall.IGN.trim() !== ''
     ).length;
@@ -666,6 +781,9 @@ function updateStallCount() {
         `${currentFloorStalls.length} stalls (${occupiedCount} occupied, ${currentFloorStalls.length - occupiedCount} vacant)`;
 }
 
+/**
+ * Update the current floor number display
+ */
 function updateCurrentFloorDisplay() {
     if (mapElements.currentFloorDisplay) {
         mapElements.currentFloorDisplay.textContent = mapData.currentFloor;
@@ -673,39 +791,51 @@ function updateCurrentFloorDisplay() {
 }
 
 /* ========================================
-   MODAL FUNCTIONALITY
+   STALL MODAL SYSTEM
    ======================================== */
 
+/**
+ * Show detailed information modal for a stall
+ * @param {Object} stall - Stall data to display
+ */
 function showStallModal(stall) {
-    if (!mapElements.modal) return;
+    if (!mapElements.modal) {
+        console.warn('Modal element not found');
+        return;
+    }
     
     // Populate modal with stall data
-    const modalStallName = document.getElementById('modal-stall-name');
-    const modalStallNumber = document.getElementById('modal-stall-number');
-    const modalStreetName = document.getElementById('modal-street-name');
-    const modalOwner = document.getElementById('modal-owner');
-    const modalItems = document.getElementById('modal-items');
-    const visitStallBtn = document.getElementById('visit-stall-btn');
+    const elements = {
+        stallName: document.getElementById('modal-stall-name'),
+        stallNumber: document.getElementById('modal-stall-number'),
+        streetName: document.getElementById('modal-street-name'),
+        owner: document.getElementById('modal-owner'),
+        items: document.getElementById('modal-items'),
+        visitBtn: document.getElementById('visit-stall-btn')
+    };
     
-    if (modalStallName) modalStallName.textContent = stall.StallName || 'Unnamed Stall';
-    if (modalStallNumber) modalStallNumber.textContent = stall.StallNumber;
-    if (modalStreetName) modalStreetName.textContent = stall.StreetName;
-    if (modalOwner) modalOwner.textContent = stall.IGN || 'Vacant';
-    if (modalItems) modalItems.textContent = stall.ItemsSold || 'No items listed';
+    // Update modal content
+    if (elements.stallName) elements.stallName.textContent = stall.StallName || 'Unnamed Stall';
+    if (elements.stallNumber) elements.stallNumber.textContent = stall.StallNumber;
+    if (elements.streetName) elements.streetName.textContent = stall.StreetName;
+    if (elements.owner) elements.owner.textContent = stall.IGN || 'Vacant';
+    if (elements.items) elements.items.textContent = stall.ItemsSold || 'No items listed';
     
     // Set up visit stall button
-    if (visitStallBtn) {
-        visitStallBtn.onclick = () => {
+    if (elements.visitBtn) {
+        elements.visitBtn.onclick = () => {
             window.location.href = `/stall/${stall.StallNumber}`;
         };
     }
     
     // Show modal
     mapElements.modal.classList.remove('hidden');
-    
     console.log('Showing modal for stall:', stall.StallNumber);
 }
 
+/**
+ * Close the stall details modal
+ */
 function closeModal() {
     if (mapElements.modal) {
         mapElements.modal.classList.add('hidden');
@@ -713,9 +843,15 @@ function closeModal() {
 }
 
 /* ========================================
-   UTILITY FUNCTIONS
+   UTILITY FUNCTIONS & EVENT HANDLERS
    ======================================== */
 
+/**
+ * Debounce function to limit rapid function calls
+ * @param {Function} func - Function to debounce
+ * @param {number} wait - Wait time in milliseconds
+ * @returns {Function} Debounced function
+ */
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -728,13 +864,16 @@ function debounce(func, wait) {
     };
 }
 
-// Keyboard shortcuts
+/**
+ * Set up global keyboard shortcuts
+ */
 document.addEventListener('keydown', (e) => {
+    // Close modal with Escape key
     if (e.key === 'Escape') {
         closeModal();
     }
     
-    // Floor switching with number keys
+    // Floor switching with number keys (1-5)
     if (e.key >= '1' && e.key <= '5') {
         const floor = parseInt(e.key);
         if (MAP_CONFIG.FLOORS.includes(floor)) {
@@ -742,6 +881,17 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// Console helper for debugging
+window.mallMapDebug = {
+    mapData,
+    mapElements,
+    MAP_CONFIG,
+    switchToFloor,
+    renderMap,
+    calculateStallPosition,
+    parseStallNumber
+};
 
 // Export for debugging
 window.MAP_DEBUG = {

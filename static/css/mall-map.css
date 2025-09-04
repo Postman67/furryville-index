@@ -30,7 +30,6 @@
   --floor-transition: 0.3s ease;
   
   /* Typography */
-  --legend-font-size: 14px;
   --floor-label-font-size: 16px;
   --stall-label-font-size: 12px;
 }
@@ -145,57 +144,6 @@ body:has(.mall-map) .main-content,
 }
 
 /* ========================================
-   MAP LEGEND
-   ======================================== */
-
-.map-legend {
-  background: rgba(52, 73, 94, 0.8);
-  padding: 20px;
-  border-radius: 10px;
-  border: 2px solid #34495e;
-  text-align: center;
-}
-
-.map-legend h3 {
-  margin: 0 0 15px 0;
-  color: #ecf0f1;
-  font-size: var(--legend-font-size);
-}
-
-.legend-items {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #ecf0f1;
-  font-size: var(--legend-font-size);
-}
-
-.legend-color {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  border: 2px solid var(--stall-border-color);
-}
-
-.legend-color.occupied {
-  background: var(--occupied-stall-color);
-}
-
-.legend-color.vacant {
-  background: var(--vacant-stall-color);
-}
-
-.legend-color.street {
-  background: var(--street-color);
-}
-
-/* ========================================
    MAP INFO
    ======================================== */
 
@@ -216,7 +164,7 @@ body:has(.mall-map) .main-content,
 .current-floor-info p {
   margin: 0;
   color: #bdc3c7;
-  font-size: var(--legend-font-size);
+  font-size: 14px;
 }
 
 /* ========================================
@@ -227,7 +175,7 @@ body:has(.mall-map) .main-content,
   background: rgba(44, 62, 80, 0.9);
   border-radius: 15px;
   padding: var(--map-padding);
-  border: 3px solid #34495e;
+  border: 1px solid #34495e;
   margin-bottom: 30px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -271,15 +219,22 @@ body:has(.mall-map) .main-content,
 
 .street-label {
   position: absolute;
-  color: #ecf0f1;
-  font-size: var(--stall-label-font-size);
+  color: #ffffff;
+  font-size: 14px;
   font-weight: bold;
   z-index: 10;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 4px 8px;
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.85);
+  padding: 6px 10px;
+  border-radius: 6px;
   pointer-events: none;
   text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.street-label.main-street-label {
+  background: rgba(52, 73, 94, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* ========================================
@@ -492,12 +447,6 @@ body:has(.mall-map) .main-content,
     flex-wrap: wrap;
     justify-content: center;
   }
-  
-  .legend-items {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
 }
 
 @media (max-width: 768px) {
@@ -536,10 +485,6 @@ body:has(.mall-map) .main-content,
   }
   
   .floor-buttons {
-    flex-direction: column;
-  }
-  
-  .legend-items {
     flex-direction: column;
   }
   
