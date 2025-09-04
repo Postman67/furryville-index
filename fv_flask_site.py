@@ -43,6 +43,11 @@ def the_mall():
     """The Mall"""
     return render_template('the_mall.html', title='The Mall - Furryville',message='Search for shop stalls in The Mall')
 
+@app.route('/the-mall/map')
+def the_mall_map():
+    """Interactive Map for The Mall"""
+    return render_template('mall_map.html', title='Mall Map - Furryville', message='Interactive map of The Mall floors')
+
 @app.route('/about')
 def about():
     """About page"""
