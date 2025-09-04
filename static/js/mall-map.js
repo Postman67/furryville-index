@@ -2,30 +2,97 @@
  * Interactive Mall Map System
  * 
  * This file handles the rendering and interaction of the top-down mall map.
- * The map displays stalls positioned according to Minecraft coordinates across 5 floors.
+ * The map displays stalls positioned according to Minecraft coordinates acro/**
+ * Get street configuration by name
+ * @param {string} streetName - Name of the street
+ * @returns {Object|null} Street configuration object
  */
+function getStreetByName(streetName) {
+    return MAP_CONFIG.STREETS.find(street => street.name === streetName) || null;
+}
+
+/**
+ * Get street index by name (legacy function for compatibility)
+ * @param {string} streetName - Name of the street
+ * @returns {number} Street index or -1 if not found
+ */
+function getStreetIndex(streetName) {
+    const street = getStreetByName(streetName);
+    return street ? street.index : -1;
+}
+
+/**
+ * Get stall count for a specific street section
+ * @param {string} streetName - Name of the street
+ * @param {boolean} isNorth - True for north side, false for south side
+ * @param {boolean} isWest - True for west of Main Street, false for east
+ * @returns {number} Number of stalls in that section
+ */
+function getStallCountForSection(streetName, isNorth, isWest) {
+    // Normalize street name for config lookup
+    const normalizedStreetName = streetName.replace(/\s+/g, '');
+    const sideStr = isNorth ? 'North' : 'South';
+    const sectionStr = isWest ? 'West' : 'East';
+    const configKey = `${normalizedStreetName}${sideStr}${sectionStr}_StallCount`;
+    
+    return MAP_CONFIG[configKey] || 0;
+}
 
 /* ========================================
    EASY TO CHANGE CONFIGURATION VARIABLES
    ======================================== */
 
 const MAP_CONFIG = {
-    // Map dimensions and scaling
+    // Grid-based configuration (Minecraft blocks)
+    GRID_WIDTH: 117,                  // Total grid width in blocks
+    GRID_HEIGHT: 102,                 // Total grid height in blocks
+    
+    // Visual scaling
     BLOCK_SIZE: 8,                    // Pixels per Minecraft block
-    STREET_WIDTH: 9,                  // Blocks wide for cross streets
-    MAIN_STREET_WIDTH: 9,             // Blocks wide for main street
     
-    // Default stall dimensions (in blocks) - fallback when DB doesn't specify
-    DEFAULT_STALL_WIDTH: 3,
-    DEFAULT_STALL_DEPTH: 3,
+    // Street configuration
+    STREET_LENGTH: 117,               // Length of horizontal streets in blocks
+    STREET_WIDTH: 3,                  // Width of streets in blocks (visual only) - made wider
+    STREET_SEPARATION: 20,            // Distance between horizontal streets in blocks
     
-    // Stall layout configuration
-    MAX_STALLS_PER_SIDE: 13,         // Maximum stalls on each side of a street
-    MAIN_STREET_POSITION: 13,        // Position where Main Street crosses (stall 13-14 gap)
+    // Streets layout (Y positions in blocks from top)
+    STREETS: [
+        { name: "Wall Street", index: 0, yBlock: 10 },      // Northernmost street
+        { name: "Artist Alley", index: 1, yBlock: 30 },
+        { name: "Woke Ave", index: 2, yBlock: 50 },
+        { name: "Poland Street", index: 3, yBlock: 70 },
+        { name: "Five", index: -1, yBlock: -1 }             // Not displayed
+    ],
     
-    // Animation and interaction settings
-    HOVER_SCALE: 1.05,               // Scale factor on hover
-    ANIMATION_DURATION: 200,         // MS for hover animations
+    // Main Street (vertical)
+    MAIN_STREET_X_BLOCK: 55,          // X position where Main Street starts (block)
+    MAIN_STREET_WIDTH: 9,             // Width of Main Street in blocks
+    
+    // Stall configuration
+    MAX_STALLS_PER_SIDE: 13,          // Maximum 13 stalls per side of Main Street (fallback)
+    DEFAULT_STALL_WIDTH: 4,           // Default stall width in blocks
+    DEFAULT_STALL_DEPTH: 4,           // Default stall depth in blocks
+    
+    // Street-specific stall counts (North/South sides, West/East of Main Street)
+    WallStreetNorthWest_StallCount: 6,
+    WallStreetNorthEast_StallCount: 6,
+    WallStreetSouthWest_StallCount: 6,
+    WallStreetSouthEast_StallCount: 6,
+    
+    ArtistAlleyNorthWest_StallCount: 8,
+    ArtistAlleyNorthEast_StallCount: 6,
+    ArtistAlleySouthWest_StallCount: 8,
+    ArtistAlleySouthEast_StallCount: 6,
+    
+    WokeAveNorthWest_StallCount: 7,
+    WokeAveNorthEast_StallCount: 6,
+    WokeAveSouthWest_StallCount: 6,
+    WokeAveSouthEast_StallCount: 6,
+    
+    PolandStreetNorthWest_StallCount: 7,
+    PolandStreetNorthEast_StallCount: 6,
+    PolandStreetSouthWest_StallCount: 6,
+    PolandStreetSouthEast_StallCount: 6,
     
     // Floor configuration
     FLOORS: [1, 2, 3, 4, 5],
@@ -37,26 +104,18 @@ const MAP_CONFIG = {
         5: "Fifth Floor"
     },
     
-    // Street layout configuration
-    STREETS: [
-        { name: "Wall Street", index: 0 },
-        { name: "Artist Alley", index: 1 },
-        { name: "Woke Ave", index: 2 },
-        { name: "Five", index: -1 },
-        { name: "Poland Street", index: 4 }
-    ],
+    // Visual settings
+    SHOW_STALL_NUMBERS: true,         // Show stall numbers on map
+    SHOW_STREET_LABELS: true,         // Show street name labels
+    ENABLE_HOVER_EFFECTS: true,       // Enable hover animations
+    SHOW_GRID: true,                 // Show grid lines for debugging
+    
+    // Animation settings
+    HOVER_SCALE: 1.05,               // Scale factor on hover
+    ANIMATION_DURATION: 200,         // MS for hover animations
     
     // Map layout settings
-    STREET_SPACING: 208,             // Pixels between street centers
-                                     // Calculation: (3 stall depth + 20 gap + 3 stall depth) * 8px = 208px
-    STALL_SPACING: 0,                // Pixels between stalls (no spacing - stalls are adjacent)
-    MAP_MARGIN: 50,                  // Pixels margin around map
-    MAIN_STREET_GAP: 100,            // Gap for Main Street in pixels
-    
-    // Visual settings
-    SHOW_STALL_NUMBERS: true,        // Show stall numbers on map
-    SHOW_STREET_LABELS: true,        // Show street name labels
-    ENABLE_HOVER_EFFECTS: true,      // Enable hover animations
+    MAP_MARGIN: 120,                  // Pixels margin around map - increased for better label visibility
     
     // Colors (can override CSS if needed)
     COLORS: {
@@ -195,127 +254,164 @@ function getStreetIndex(streetName) {
     return street ? street.index : 0;
 }
 
+/**
+ * Calculate stall position using grid-based system with new orientation logic
+ * @param {Object} stall - Stall data from database
+ * @param {Array} allStalls - All stalls for width calculation
+ * @returns {Object|null} Position object with x, y, width, height, anchor info
+ */
 function calculateStallPosition(stall, allStalls) {
     const { floor, position } = parseStallNumber(stall.StallNumber);
-    const streetIndex = getStreetIndex(stall.StreetName);
+    const street = getStreetByName(stall.StreetName);
     
-    // Skip if street index is -1 (like "Five" street which we're not positioning)
-    if (streetIndex === -1) return null;
+    // Skip if street is not displayed
+    if (!street || street.index === -1) return null;
     
-    // Determine which side of the street (even = right/top, odd = left/bottom) - FLIPPED
-    const isRightSide = position % 2 === 0;
+    // Get stall dimensions (in blocks)
+    const stallWidthBlocks = stall.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH;
+    const stallDepthBlocks = stall.stall_depth || MAP_CONFIG.DEFAULT_STALL_DEPTH;
     
-    // Get stall dimensions (use defaults if not specified)
-    const width = (stall.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH) * MAP_CONFIG.BLOCK_SIZE;
-    const depth = (stall.stall_depth || MAP_CONFIG.DEFAULT_STALL_DEPTH) * MAP_CONFIG.BLOCK_SIZE;
+    // NEW LOGIC: Determine side using stall number (odd = south, even = north)
+    const isNorthSide = position % 2 === 0;
     
-    // Calculate which stall position this is on its side (1-13)
-    const stallIndexOnSide = Math.ceil(position / 2);
+    // Determine which section this stall should be in based on available space
+    const northWestCount = getStallCountForSection(stall.StreetName, true, true);
+    const northEastCount = getStallCountForSection(stall.StreetName, true, false);
+    const southWestCount = getStallCountForSection(stall.StreetName, false, true);
+    const southEastCount = getStallCountForSection(stall.StreetName, false, false);
     
-    // Don't place stalls where Main Street crosses (around position 13)
-    if (stallIndexOnSide > MAP_CONFIG.MAX_STALLS_PER_SIDE) {
-        return null; // This stall position would be beyond our layout
+    // Calculate which position this stall should be in its side
+    let isWestOfMainStreet = true;
+    let positionInSection = 1;
+    
+    if (isNorthSide) {
+        // For north side stalls, fill west section first, then east
+        const northStallsOnSameSide = allStalls.filter(s => {
+            const { floor: sFloor, position: sPosition } = parseStallNumber(s.StallNumber);
+            return sFloor === floor && 
+                   s.StreetName === stall.StreetName && 
+                   sPosition % 2 === 0 && // North side
+                   sPosition < position; // Lower position numbers
+        }).length;
+        
+        if (northStallsOnSameSide < northWestCount) {
+            isWestOfMainStreet = true;
+            positionInSection = northStallsOnSameSide + 1;
+        } else {
+            isWestOfMainStreet = false;
+            positionInSection = northStallsOnSameSide - northWestCount + 1;
+        }
+        
+        // Check if this stall exceeds the available space
+        if (northStallsOnSameSide >= (northWestCount + northEastCount)) {
+            return null; // No space for this stall
+        }
+    } else {
+        // For south side stalls, fill west section first, then east
+        const southStallsOnSameSide = allStalls.filter(s => {
+            const { floor: sFloor, position: sPosition } = parseStallNumber(s.StallNumber);
+            return sFloor === floor && 
+                   s.StreetName === stall.StreetName && 
+                   sPosition % 2 === 1 && // South side
+                   sPosition < position; // Lower position numbers
+        }).length;
+        
+        if (southStallsOnSameSide < southWestCount) {
+            isWestOfMainStreet = true;
+            positionInSection = southStallsOnSameSide + 1;
+        } else {
+            isWestOfMainStreet = false;
+            positionInSection = southStallsOnSameSide - southWestCount + 1;
+        }
+        
+        // Check if this stall exceeds the available space
+        if (southStallsOnSameSide >= (southWestCount + southEastCount)) {
+            return null; // No space for this stall
+        }
     }
     
-    // Determine if this stall is before or after Main Street
-    const isBeforeMainStreet = stallIndexOnSide <= Math.floor(MAP_CONFIG.MAX_STALLS_PER_SIDE / 2);
-    
-    // Get all stalls on this street in this section and build position pairs
-    const sameStreetSection = allStalls.filter(s => {
+    // Calculate cumulative width from previous stalls in the same section
+    const sameSection = allStalls.filter(s => {
         const { floor: sFloor, position: sPosition } = parseStallNumber(s.StallNumber);
-        const sStreetIndex = getStreetIndex(s.StreetName);
-        const sStallIndexOnSide = Math.ceil(sPosition / 2);
-        const sIsBeforeMainStreet = sStallIndexOnSide <= Math.floor(MAP_CONFIG.MAX_STALLS_PER_SIDE / 2);
+        const sIsNorthSide = sPosition % 2 === 0;
+        
+        // Determine which section the comparison stall is in
+        let sIsWestOfMainStreet = true;
+        if (sIsNorthSide) {
+            const sNorthStallsOnSameSide = allStalls.filter(ss => {
+                const { floor: ssFloor, position: ssPosition } = parseStallNumber(ss.StallNumber);
+                return ssFloor === sFloor && 
+                       ss.StreetName === s.StreetName && 
+                       ssPosition % 2 === 0 && 
+                       ssPosition < sPosition;
+            }).length;
+            sIsWestOfMainStreet = sNorthStallsOnSameSide < northWestCount;
+        } else {
+            const sSouthStallsOnSameSide = allStalls.filter(ss => {
+                const { floor: ssFloor, position: ssPosition } = parseStallNumber(ss.StallNumber);
+                return ssFloor === sFloor && 
+                       ss.StreetName === s.StreetName && 
+                       ssPosition % 2 === 1 && 
+                       ssPosition < sPosition;
+            }).length;
+            sIsWestOfMainStreet = sSouthStallsOnSameSide < southWestCount;
+        }
         
         return sFloor === floor && 
-               sStreetIndex === streetIndex && 
-               sIsBeforeMainStreet === isBeforeMainStreet;
+               s.StreetName === stall.StreetName && 
+               sIsNorthSide === isNorthSide && 
+               sIsWestOfMainStreet === isWestOfMainStreet &&
+               sPosition < position;
     });
     
-    // Build position pairs for width calculation
-    const positionPairs = {};
-    sameStreetSection.forEach(s => {
-        const sStallIndexOnSide = Math.ceil(parseStallNumber(s.StallNumber).position / 2);
-        const sIsRightSide = parseStallNumber(s.StallNumber).position % 2 === 0;
-        
-        if (!positionPairs[sStallIndexOnSide]) {
-            positionPairs[sStallIndexOnSide] = { left: null, right: null };
-        }
-        
-        if (sIsRightSide) {
-            positionPairs[sStallIndexOnSide].right = s;
-        } else {
-            positionPairs[sStallIndexOnSide].left = s;
-        }
+    let cumulativeWidthBlocks = 0;
+    sameSection.forEach(prevStall => {
+        const prevWidth = prevStall.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH;
+        cumulativeWidthBlocks += prevWidth;
     });
     
-    // Calculate cumulative width up to this stall's position
-    let cumulativeWidth = 0;
-    for (let i = 1; i < stallIndexOnSide; i++) {
-        if (positionPairs[i]) {
-            let leftWidth = 0;
-            let rightWidth = 0;
-            
-            if (positionPairs[i].left) {
-                leftWidth = (positionPairs[i].left.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH) * MAP_CONFIG.BLOCK_SIZE;
-            }
-            if (positionPairs[i].right) {
-                rightWidth = (positionPairs[i].right.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH) * MAP_CONFIG.BLOCK_SIZE;
-            }
-            
-            // Use the maximum width from either side for this position
-            cumulativeWidth += Math.max(leftWidth, rightWidth, MAP_CONFIG.DEFAULT_STALL_WIDTH * MAP_CONFIG.BLOCK_SIZE);
-        } else {
-            // No stalls at this position, use default width
-            cumulativeWidth += MAP_CONFIG.DEFAULT_STALL_WIDTH * MAP_CONFIG.BLOCK_SIZE;
-        }
-    }
-    
-    // Calculate X position (along the street)
-    let x = MAP_CONFIG.MAP_MARGIN + cumulativeWidth;
-    
-    // If this stall is after Main Street, add the gap and first section width
-    if (!isBeforeMainStreet) {
-        // Calculate first section width using same pair logic
-        let firstSectionWidth = 0;
-        for (let i = 1; i <= Math.floor(MAP_CONFIG.MAX_STALLS_PER_SIDE / 2); i++) {
-            if (positionPairs[i]) {
-                let leftWidth = 0;
-                let rightWidth = 0;
-                
-                if (positionPairs[i].left) {
-                    leftWidth = (positionPairs[i].left.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH) * MAP_CONFIG.BLOCK_SIZE;
-                }
-                if (positionPairs[i].right) {
-                    rightWidth = (positionPairs[i].right.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH) * MAP_CONFIG.BLOCK_SIZE;
-                }
-                
-                firstSectionWidth += Math.max(leftWidth, rightWidth, MAP_CONFIG.DEFAULT_STALL_WIDTH * MAP_CONFIG.BLOCK_SIZE);
-            } else {
-                firstSectionWidth += MAP_CONFIG.DEFAULT_STALL_WIDTH * MAP_CONFIG.BLOCK_SIZE;
-            }
-        }
-        
-        x = MAP_CONFIG.MAP_MARGIN + firstSectionWidth + MAP_CONFIG.MAIN_STREET_GAP + cumulativeWidth;
-    }
-    
-    // Calculate Y position (which street and which side) - FIXED: not affected by width
-    let y = MAP_CONFIG.MAP_MARGIN + (streetIndex * MAP_CONFIG.STREET_SPACING);
-    
-    if (isRightSide) {
-        // Right side (above/north of street) - stalls go in the gap before the street
-        y -= depth; // Place stall above the street, ending at the street edge
+    // Calculate X position in blocks
+    let xBlock;
+    if (isWestOfMainStreet) {
+        xBlock = cumulativeWidthBlocks;
     } else {
-        // Left side (below/south of street) - stalls go in the gap after the street
-        y += (MAP_CONFIG.STREET_WIDTH * MAP_CONFIG.BLOCK_SIZE); // Start after the street
+        xBlock = MAP_CONFIG.MAIN_STREET_X_BLOCK + MAP_CONFIG.MAIN_STREET_WIDTH + cumulativeWidthBlocks;
     }
+    
+    // Calculate Y position based on street and side
+    let yBlock;
+    let anchorSide;
+    
+    if (isNorthSide) {
+        // North side: stall extends north from the street
+        yBlock = street.yBlock - stallDepthBlocks;
+        anchorSide = 'bottom-left';
+    } else {
+        // South side: stall extends south from the street  
+        yBlock = street.yBlock + MAP_CONFIG.STREET_WIDTH;
+        anchorSide = 'top-left';
+    }
+    
+    // Convert blocks to pixels for rendering
+    const xPixels = MAP_CONFIG.MAP_MARGIN + (xBlock * MAP_CONFIG.BLOCK_SIZE);
+    const yPixels = MAP_CONFIG.MAP_MARGIN + (yBlock * MAP_CONFIG.BLOCK_SIZE);
+    const widthPixels = stallWidthBlocks * MAP_CONFIG.BLOCK_SIZE;
+    const heightPixels = stallDepthBlocks * MAP_CONFIG.BLOCK_SIZE;
     
     return {
-        x: x,
-        y: y,
-        width: width,
-        height: depth,
-        isRightSide: isRightSide
+        x: xPixels,
+        y: yPixels,
+        width: widthPixels,
+        height: heightPixels,
+        xBlock: xBlock,
+        yBlock: yBlock,
+        widthBlocks: stallWidthBlocks,
+        heightBlocks: stallDepthBlocks,
+        isNorthSide: isNorthSide,
+        isWestOfMainStreet: isWestOfMainStreet,
+        positionInSection: positionInSection,
+        anchorSide: anchorSide,
+        street: street.name
     };
 }
 
@@ -365,44 +461,38 @@ function renderMap() {
     }
 }
 
+/**
+ * Calculate map dimensions using grid system
+ * @param {Array} stalls - Array of stall data
+ * @returns {Object} Map dimensions with width and height
+ */
 function calculateMapDimensions(stalls) {
-    let maxX = 0;
-    let maxY = 0;
-    
-    stalls.forEach(stall => {
-        const pos = calculateStallPosition(stall, stalls);
-        if (pos) { // Only calculate for valid positions
-            maxX = Math.max(maxX, pos.x + pos.width);
-            maxY = Math.max(maxY, pos.y + pos.height);
-        }
-    });
-    
-    // Ensure minimum dimensions that accommodate the full layout
-    const minWidth = (MAP_CONFIG.MAX_STALLS_PER_SIDE * MAP_CONFIG.DEFAULT_STALL_WIDTH * MAP_CONFIG.BLOCK_SIZE) + 
-                     MAP_CONFIG.MAIN_STREET_GAP + (MAP_CONFIG.MAP_MARGIN * 2);
+    // Use fixed grid dimensions
+    const widthPixels = MAP_CONFIG.GRID_WIDTH * MAP_CONFIG.BLOCK_SIZE + (MAP_CONFIG.MAP_MARGIN * 2);
+    const heightPixels = MAP_CONFIG.GRID_HEIGHT * MAP_CONFIG.BLOCK_SIZE + (MAP_CONFIG.MAP_MARGIN * 2);
     
     return {
-        width: Math.max(1200, maxX + MAP_CONFIG.MAP_MARGIN, minWidth),
-        height: Math.max(600, maxY + MAP_CONFIG.MAP_MARGIN)
+        width: widthPixels,
+        height: heightPixels,
+        gridWidthBlocks: MAP_CONFIG.GRID_WIDTH,
+        gridHeightBlocks: MAP_CONFIG.GRID_HEIGHT
     };
 }
 
+/**
+ * Render horizontal streets on the map
+ */
 function renderStreets() {
-    // Render horizontal streets
-    MAP_CONFIG.STREETS.forEach((street, index) => {
-        // Skip streets with index -1
+    MAP_CONFIG.STREETS.forEach(street => {
+        // Skip streets that aren't displayed
         if (street.index === -1) return;
         
         const streetElement = document.createElement('div');
-        streetElement.className = 'street';
+        streetElement.className = 'street horizontal-street';
         streetElement.style.position = 'absolute';
         streetElement.style.left = MAP_CONFIG.MAP_MARGIN + 'px';
-        streetElement.style.top = (MAP_CONFIG.MAP_MARGIN + (street.index * MAP_CONFIG.STREET_SPACING)) + 'px';
-        
-        // Calculate street width to span the full layout
-        const streetWidth = (MAP_CONFIG.MAX_STALLS_PER_SIDE * MAP_CONFIG.DEFAULT_STALL_WIDTH * MAP_CONFIG.BLOCK_SIZE) + 
-                           MAP_CONFIG.MAIN_STREET_GAP;
-        streetElement.style.width = streetWidth + 'px';
+        streetElement.style.top = (MAP_CONFIG.MAP_MARGIN + (street.yBlock * MAP_CONFIG.BLOCK_SIZE)) + 'px';
+        streetElement.style.width = (MAP_CONFIG.STREET_LENGTH * MAP_CONFIG.BLOCK_SIZE) + 'px';
         streetElement.style.height = (MAP_CONFIG.STREET_WIDTH * MAP_CONFIG.BLOCK_SIZE) + 'px';
         streetElement.dataset.street = street.name;
         
@@ -410,111 +500,71 @@ function renderStreets() {
     });
 }
 
+/**
+ * Render Main Street (vertical) on the map
+ * @param {Array} stalls - Array of stall data (not used in grid system but kept for compatibility)
+ * @returns {number} X position of Main Street in pixels
+ */
 function renderMainStreet(stalls) {
-    // Calculate the actual width of the first section (before Main Street)
-    // using consistent paired width logic
-    let maxBeforeMainStreetWidth = 0;
-    
-    // Check all streets
-    MAP_CONFIG.STREETS.forEach(street => {
-        if (street.index === -1) return;
-        
-        const streetStalls = stalls.filter(s => s.StreetName === street.name);
-        
-        // Group stalls by position pairs for this street (only before Main Street)
-        const positionPairs = {};
-        streetStalls.forEach(stall => {
-            const stallIndexOnSide = Math.ceil(parseStallNumber(stall.StallNumber).position / 2);
-            const isRightSide = parseStallNumber(stall.StallNumber).position % 2 === 0;
-            
-            // Only consider stalls before Main Street
-            if (stallIndexOnSide <= Math.floor(MAP_CONFIG.MAX_STALLS_PER_SIDE / 2)) {
-                if (!positionPairs[stallIndexOnSide]) {
-                    positionPairs[stallIndexOnSide] = { left: null, right: null };
-                }
-                
-                if (isRightSide) {
-                    positionPairs[stallIndexOnSide].right = stall;
-                } else {
-                    positionPairs[stallIndexOnSide].left = stall;
-                }
-            }
-        });
-        
-        // Calculate total width for this street using max width per pair
-        let streetWidth = 0;
-        for (let i = 1; i <= Math.floor(MAP_CONFIG.MAX_STALLS_PER_SIDE / 2); i++) {
-            if (positionPairs[i]) {
-                let leftWidth = 0;
-                let rightWidth = 0;
-                
-                if (positionPairs[i].left) {
-                    leftWidth = (positionPairs[i].left.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH) * MAP_CONFIG.BLOCK_SIZE;
-                }
-                if (positionPairs[i].right) {
-                    rightWidth = (positionPairs[i].right.stall_width || MAP_CONFIG.DEFAULT_STALL_WIDTH) * MAP_CONFIG.BLOCK_SIZE;
-                }
-                
-                streetWidth += Math.max(leftWidth, rightWidth, MAP_CONFIG.DEFAULT_STALL_WIDTH * MAP_CONFIG.BLOCK_SIZE);
-            } else {
-                // No stalls at this position, use default width
-                streetWidth += MAP_CONFIG.DEFAULT_STALL_WIDTH * MAP_CONFIG.BLOCK_SIZE;
-            }
-        }
-        
-        maxBeforeMainStreetWidth = Math.max(maxBeforeMainStreetWidth, streetWidth);
-    });
-    
-    // Calculate Main Street position based on actual stall widths
-    const mainStreetX = MAP_CONFIG.MAP_MARGIN + maxBeforeMainStreetWidth;
+    // Calculate Main Street position in pixels
+    const mainStreetXPixels = MAP_CONFIG.MAP_MARGIN + (MAP_CONFIG.MAIN_STREET_X_BLOCK * MAP_CONFIG.BLOCK_SIZE);
     
     // Render Main Street (vertical)
     const mainStreet = document.createElement('div');
     mainStreet.className = 'street main-street';
     mainStreet.style.position = 'absolute';
-    mainStreet.style.left = mainStreetX + 'px';
+    mainStreet.style.left = mainStreetXPixels + 'px';
     mainStreet.style.top = MAP_CONFIG.MAP_MARGIN + 'px';
-    mainStreet.style.width = MAP_CONFIG.MAIN_STREET_GAP + 'px';
-    
-    // Calculate height to span all streets
-    const validStreets = MAP_CONFIG.STREETS.filter(s => s.index !== -1);
-    const maxStreetIndex = Math.max(...validStreets.map(s => s.index));
-    const mainStreetHeight = (maxStreetIndex + 1) * MAP_CONFIG.STREET_SPACING + 
-                           (MAP_CONFIG.DEFAULT_STALL_DEPTH * MAP_CONFIG.BLOCK_SIZE * 2) + 
-                           (MAP_CONFIG.STREET_WIDTH * MAP_CONFIG.BLOCK_SIZE);
-    
-    mainStreet.style.height = mainStreetHeight + 'px';
+    mainStreet.style.width = (MAP_CONFIG.MAIN_STREET_WIDTH * MAP_CONFIG.BLOCK_SIZE) + 'px';
+    mainStreet.style.height = (MAP_CONFIG.GRID_HEIGHT * MAP_CONFIG.BLOCK_SIZE) + 'px';
     
     mapElements.mapContainer.appendChild(mainStreet);
     
-    return mainStreetX; // Return position for label positioning
+    return mainStreetXPixels;
 }
 
-function renderStreetLabels(mainStreetX) {
-    MAP_CONFIG.STREETS.forEach((street, index) => {
-        // Skip streets with index -1
+/**
+ * Render street labels on the map
+ * @param {number} mainStreetXPixels - X position of Main Street in pixels
+ */
+function renderStreetLabels(mainStreetXPixels) {
+    // Render horizontal street labels
+    MAP_CONFIG.STREETS.forEach(street => {
+        // Skip streets that aren't displayed
         if (street.index === -1) return;
         
         const label = document.createElement('div');
         label.className = 'street-label';
         label.textContent = street.name;
         label.style.position = 'absolute';
-        label.style.left = (MAP_CONFIG.MAP_MARGIN - 10) + 'px';
-        label.style.top = (MAP_CONFIG.MAP_MARGIN + (street.index * MAP_CONFIG.STREET_SPACING) + 20) + 'px';
+        label.style.left = (MAP_CONFIG.MAP_MARGIN - 15) + 'px'; // Moved further left
+        label.style.top = (MAP_CONFIG.MAP_MARGIN + (street.yBlock * MAP_CONFIG.BLOCK_SIZE) + 8) + 'px'; // Better vertical centering
         label.style.transform = 'translateX(-100%)';
+        label.style.zIndex = '100'; // Ensure labels are on top
+        label.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'; // Semi-transparent background
+        label.style.padding = '2px 6px'; // Some padding for readability
+        label.style.borderRadius = '3px'; // Rounded corners
+        label.style.fontSize = '12px'; // Consistent font size
+        label.style.fontWeight = 'bold'; // Make labels more visible
         
         mapElements.mapContainer.appendChild(label);
     });
     
-    // Main Street label - use the passed in position
+    // Main Street label
     const mainLabel = document.createElement('div');
     mainLabel.className = 'street-label';
     mainLabel.textContent = 'Main Street';
     mainLabel.style.position = 'absolute';
-    mainLabel.style.left = (mainStreetX + (MAP_CONFIG.MAIN_STREET_GAP / 2)) + 'px';
-    mainLabel.style.top = (MAP_CONFIG.MAP_MARGIN - 10) + 'px';
+    mainLabel.style.left = (mainStreetXPixels + (MAP_CONFIG.MAIN_STREET_WIDTH * MAP_CONFIG.BLOCK_SIZE / 2)) + 'px';
+    mainLabel.style.top = (MAP_CONFIG.MAP_MARGIN - 15) + 'px'; // Moved further up
     mainLabel.style.transform = 'translateY(-100%) translateX(-50%) rotate(-90deg)';
     mainLabel.style.transformOrigin = 'center bottom';
+    mainLabel.style.zIndex = '100'; // Ensure labels are on top
+    mainLabel.style.backgroundColor = 'rgba(255, 255, 255, 0.9)'; // Semi-transparent background
+    mainLabel.style.padding = '2px 6px'; // Some padding for readability
+    mainLabel.style.borderRadius = '3px'; // Rounded corners
+    mainLabel.style.fontSize = '12px'; // Consistent font size
+    mainLabel.style.fontWeight = 'bold'; // Make labels more visible
     
     mapElements.mapContainer.appendChild(mainLabel);
 }
