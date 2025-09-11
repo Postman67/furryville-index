@@ -5,7 +5,7 @@ Site DB user is **READ ONLY**
 
 - Host: `mysql.railway.internal`
 - Read account: I'm not telling :3
-- Password stored in local .env
+- Password stored in global environment
 
 ## Warp Hall DB entry format
 Table Name: `warp_hall`
