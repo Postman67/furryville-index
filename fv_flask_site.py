@@ -14,11 +14,19 @@ ENABLE_WARP_HALL_STALL_PAGES = False  # Set to True to enable Warp Hall stall pa
 def get_db_connection():
     """Get database connection"""
     try:
+        # Check for required environment variables
+        required_vars = ['FV_INDEX_READER_PASS', 'DB_HOST', 'DB_NAME']
+        missing_vars = [var for var in required_vars if not os.environ.get(var)]
+        
+        if missing_vars:
+            print(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
+            return None
+        
         conn = pymysql.connect(
             user="fv-index-reader",
             password=os.environ['FV_INDEX_READER_PASS'],
-            host="mysql.railway.internal",
-            database="furryville",
+            host=os.environ['DB_HOST'],
+            database=os.environ['DB_NAME'],
             charset='utf8mb4',
             autocommit=True,
             connect_timeout=60,
@@ -28,6 +36,9 @@ def get_db_connection():
         return conn
     except pymysql.Error as e:
         print(f"Error connecting to MySQL: {e}")
+        return None
+    except KeyError as e:
+        print(f"Error: Missing environment variable {e}")
         return None
 
 @app.route('/')
