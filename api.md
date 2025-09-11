@@ -2,6 +2,9 @@
 
 This document provides comprehensive documentation for all API endpoints in the Furryville Index Flask application.
 
+## Database
+The application uses **MySQL** as its database backend, connected via PyMySQL driver. The database is hosted on Railway at `mysql.railway.internal`.
+
 ## API Endpoints
 
 ### 1. Health Check Endpoints
@@ -240,7 +243,15 @@ The following routes serve HTML pages rather than JSON data:
 ## Environment Variables
 
 The application requires the following environment variable:
-- `FV_INDEX_READER_PASS` - Password for the database user "fv-index-reader"
+- `FV_INDEX_READER_PASS` - Password for the MySQL database user "fv-index-reader"
+
+## Database Connection
+
+The application connects to a MySQL database with the following configuration:
+- **Host:** `mysql.railway.internal` (Railway hosting)
+- **Database:** `furryville`
+- **User:** `fv-index-reader`
+- **Driver:** PyMySQL
 
 ## Error Handling
 

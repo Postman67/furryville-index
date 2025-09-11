@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, render_template
-import pymysql as mariadb
+import pymysql
 import os
 from dotenv import load_dotenv
 
@@ -14,15 +14,17 @@ ENABLE_WARP_HALL_STALL_PAGES = False  # Set to True to enable Warp Hall stall pa
 def get_db_connection():
     """Get database connection"""
     try:
-        conn = mariadb.connect(
+        conn = pymysql.connect(
             user="fv-index-reader",
             password=os.environ['FV_INDEX_READER_PASS'],
             host="mysql.railway.internal",
-            database="railway"
+            database="furryville",
+            charset='utf8mb4',
+            autocommit=True
         )
         return conn
-    except mariadb.Error as e:
-        print(f"Error connecting to MariaDB: {e}")
+    except pymysql.Error as e:
+        print(f"Error connecting to MySQL: {e}")
         return None
 
 @app.route('/')
@@ -85,7 +87,7 @@ def warp_hall_stall(stall_number):
                              location='warp-hall',
                              title=f"{stall_data['StallName']} - {stall_data['Location']}")
         
-    except mariadb.Error as e:
+    except pymysql.Error as e:
         print(f"Error querying stall data: {e}")
         if conn:
             conn.close()
@@ -126,7 +128,7 @@ def the_mall_stall(street_name, stall_number):
                              location='the-mall',
                              title=f"{stall_data['StallName']} - {stall_data['Location']}")
         
-    except mariadb.Error as e:
+    except pymysql.Error as e:
         print(f"Error querying stall data: {e}")
         if conn:
             conn.close()
@@ -162,7 +164,7 @@ def api_warp_hall():
             "count": len(shops)
         })
         
-    except mariadb.Error as e:
+    except pymysql.Error as e:
         print(f"Error querying warp_hall: {e}")
         if conn:
             conn.close()
@@ -203,7 +205,7 @@ def api_the_mall():
             "count": len(shops)
         })
         
-    except mariadb.Error as e:
+    except pymysql.Error as e:
         print(f"Error querying the_mall: {e}")
         if conn:
             conn.close()
@@ -272,7 +274,7 @@ def api_reviews(location, identifier):
             "average_rating": sum(r["Rating"] for r in reviews) / len(reviews) if reviews else 0
         })
         
-    except mariadb.Error as e:
+    except pymysql.Error as e:
         print(f"Error querying reviews: {e}")
         if conn:
             conn.close()
