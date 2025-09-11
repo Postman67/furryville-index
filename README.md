@@ -3,7 +3,7 @@
 ## MariaDB Info
 Site DB user is **READ ONLY**
 
-- Host: `furryville-index.db`
+- Host: `mysql.railway.internal`
 - Read account: I'm not telling :3
 - Password stored in local .env
 

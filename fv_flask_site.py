@@ -16,9 +16,9 @@ def get_db_connection():
     try:
         conn = mariadb.connect(
             user="fv-index-reader",
-            password=os.getenv('FV_INDEX_READER_PASS'),
-            host="furryville-index.db",
-            database="furryville"
+            password=os.environ['FV_INDEX_READER_PASS'],
+            host="mysql.railway.internal",
+            database="railway"
         )
         return conn
     except mariadb.Error as e:
