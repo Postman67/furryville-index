@@ -11,6 +11,9 @@ blinker==1.9.0
 # Database connectivity (PyMySQL instead of mariadb for better Python 3.12 compatibility)
 PyMySQL==1.1.1
 
+# Cryptography package required for MySQL 8.0+ authentication (caching_sha2_password)
+cryptography==41.0.7
+
 # Environment variables management
 python-dotenv==1.1.1
 

@@ -20,7 +20,10 @@ def get_db_connection():
             host="mysql.railway.internal",
             database="furryville",
             charset='utf8mb4',
-            autocommit=True
+            autocommit=True,
+            connect_timeout=60,
+            read_timeout=60,
+            write_timeout=60
         )
         return conn
     except pymysql.Error as e:
