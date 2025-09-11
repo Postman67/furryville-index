@@ -242,16 +242,19 @@ The following routes serve HTML pages rather than JSON data:
 
 ## Environment Variables
 
-The application requires the following environment variable:
+The application requires the following environment variables:
 - `FV_INDEX_READER_PASS` - Password for the MySQL database user "fv-index-reader"
+- `DB_HOST` - MySQL database host address (e.g., "mysql.railway.internal")
+- `DB_NAME` - Name of the MySQL database (e.g., "furryville")
 
 ## Database Connection
 
 The application connects to a MySQL database with the following configuration:
-- **Host:** `mysql.railway.internal` (Railway hosting)
-- **Database:** `furryville`
+- **Host:** Configurable via `DB_HOST` environment variable
+- **Database:** Configurable via `DB_NAME` environment variable
 - **User:** `fv-index-reader`
 - **Driver:** PyMySQL
+- **Authentication:** Supports MySQL 8.0+ caching_sha2_password (requires cryptography package)
 
 ## Error Handling
 

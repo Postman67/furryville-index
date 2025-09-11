@@ -1,11 +1,22 @@
 # furryville-index
 
-## MariaDB Info
+## Setup
+
+### Environment Variables
+Copy `.env.example` to `.env` and configure the following variables:
+- `FV_INDEX_READER_PASS` - Database password
+- `DB_HOST` - Database host (e.g., `mysql.railway.internal`)
+- `DB_NAME` - Database name (e.g., `furryville`)
+
+See `secrets.md` for detailed environment variable documentation.
+
+## Database Info
 Site DB user is **READ ONLY**
 
-- Host: `mysql.railway.internal`
-- Read account: I'm not telling :3
-- Password stored in global environment
+- Host: Configurable via `DB_HOST` environment variable
+- Database: Configurable via `DB_NAME` environment variable  
+- Read account: fv-index-reader
+- Password stored in environment variables
 
 ## Warp Hall DB entry format
 Table Name: `warp_hall`
