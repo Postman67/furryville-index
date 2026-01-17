@@ -237,6 +237,7 @@ input:checked + .toggle-slider:before {
 /* Main Content */
 .main-content {
     max-width: 1200px;
+    width: 100%;
     margin: 0 auto;
     padding: 2rem;
     flex: 1;
