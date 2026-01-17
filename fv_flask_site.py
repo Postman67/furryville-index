@@ -49,6 +49,7 @@ def about():
     return render_template('about.html', title='About - Furryville', message='Learn more about Furryville.')
 
 @app.route('/stall/warp-hall/<int:stall_number>')
+@app.route('/stall/warp-hall/<float:stall_number>')
 def warp_hall_stall(stall_number):
     """Dynamic stall page for Warp Hall"""
     # Check if Warp Hall stall pages are enabled
@@ -92,6 +93,7 @@ def warp_hall_stall(stall_number):
         return render_template('500.html'), 500
 
 @app.route('/stall/the-mall/<street_name>/<int:stall_number>')
+@app.route('/stall/the-mall/<street_name>/<float:stall_number>')
 def the_mall_stall(street_name, stall_number):
     """Dynamic stall page for The Mall"""
     # Get stall data from database
